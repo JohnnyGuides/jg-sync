@@ -1,0 +1,3469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="jg-sync-panel-layout" content="commit-path-v1">
+<title>Johnny Guides sync</title>
+<style>
+:root {
+  color-scheme: normal;
+  font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #f1efe8;
+}
+
+html, body {
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#app {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: max-content;
+  padding: 8px 8px 12px;
+}
+
+/* no backdrop-filter. it can't blur the page behind this frame anyway, and Chrome pops when the frame resizes */
+.glass {
+  background: rgba(22, 22, 24, .92);
+  border: 1px solid rgba(255, 255, 255, .3);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .35);
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 5px 12px 5px 6px;
+  cursor: pointer;
+  user-select: none;
+  max-width: 296px;
+  font: inherit;
+  color: inherit;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pill:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid #2aa6e0;
+  outline-offset: 2px;
+}
+
+.logo {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: block;
+}
+
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #888780;
+  transition: background .3s;
+}
+
+.txt {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  color: #a9a69d;
+}
+
+.chev {
+  flex: none;
+  display: block;
+  color: #a9a69d;
+  transition: transform .2s ease;
+}
+
+.pill[aria-expanded=true] .chev {
+  transform: rotate(180deg);
+}
+
+.card {
+  margin-top: 8px;
+  width: 264px;
+  border-radius: 14px;
+  padding: 14px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .25) transparent;
+}
+
+#usagePrompt {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .16);
+}
+
+/* padding and not a margin, which would merge with the buttons' margin while the text below swaps */
+#usageTitle {
+  margin-bottom: 0;
+  padding-bottom: 3px;
+}
+
+.usage-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.usage-actions button {
+  flex: 1;
+  min-height: 34px;
+}
+
+@media (pointer: coarse) {
+  .usage-actions button {
+    min-height: 44px;
+  }
+}
+
+.deck {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, .07);
+  border-radius: 8px;
+  padding: 2px;
+  margin: 8px 0 4px;
+}
+
+.tabs button {
+  flex: 1;
+  height: 24px;
+  border: 0;
+  background: none;
+  color: #a9a69d;
+  padding: 0 6px;
+  font-size: 12px;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+}
+
+.tabs button[aria-selected=true] {
+  background: rgba(255, 255, 255, .16);
+  color: #f1efe8;
+}
+
+#drawer.card .tabs {
+  margin-top: 0;
+}
+
+/* in the Device tab the settings are just there, no fold */
+#tab-device #settingsDisc {
+  display: none;
+}
+
+#tab-device #settingsFold {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.anim {
+  opacity: 0;
+  transform: translateY(-4px) scale(.98);
+  transform-origin: top right;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.anim.in {
+  opacity: 1;
+  transform: none;
+}
+
+.credit.anim {
+  transition-duration: .45s;
+}
+
+/* the card also eases to a new max height when the player changes size */
+.card.anim {
+  transition: opacity .18s ease, transform .18s ease, max-height .22s ease;
+}
+
+/* whatever opens waits a moment, so the frame on the page is big enough by then */
+.anim.in, .fold.open, .reveal.open {
+  transition-delay: .03s;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  max-width: 148px;
+  margin-left: auto;
+}
+
+.icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin: -3px -4px 0 0;
+  border: 0;
+  background: none;
+  color: #a9a69d;
+  padding: 0;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+}
+
+.icon:hover, .icon[aria-expanded=true] {
+  background: rgba(255, 255, 255, .1);
+  color: #f1efe8;
+}
+
+.icon svg {
+  transition: transform .3s ease;
+}
+
+.icon[aria-expanded=true] svg {
+  transform: rotate(60deg);
+}
+
+.by {
+  font-size: 11.5px;
+  margin-top: 2px;
+  max-width: 170px;
+}
+
+.fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .22s ease, opacity .22s ease;
+}
+
+.fold.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+
+.fold > div {
+  overflow: hidden;
+}
+
+.disc {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #6f6c65;
+  margin: 12px 0 2px;
+  font-size: 11px;
+}
+
+.disc:hover {
+  color: #f1efe8;
+}
+
+.disc svg {
+  transition: transform .2s ease;
+}
+
+.disc[aria-expanded=true] svg {
+  transform: rotate(180deg);
+}
+
+.tiles {
+  display: flex;
+  gap: 8px;
+}
+
+.tiles button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #a9a69d;
+  font-size: 10.5px;
+  opacity: .4;
+  transition: opacity .15s, color .15s;
+}
+
+.tiles button:hover {
+  opacity: .8;
+}
+
+.tiles button[aria-pressed=true] {
+  opacity: 1;
+  color: #f1efe8;
+}
+
+.tile {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 32px;
+  border-radius: 5px;
+  background: #2c2c30;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
+  transition: box-shadow .15s, background .15s;
+}
+
+/* the picked tile is bright and the others dimmed (a border would look like the outline option) */
+[aria-pressed=true] .tile {
+  background: #34343a;
+}
+
+.tile i {
+  position: absolute;
+  pointer-events: none;
+}
+
+.tile .av {
+  left: 4px;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .35);
+}
+
+.tile .ln {
+  left: 10px;
+  top: 5px;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, .25);
+}
+
+.tile .media {
+  left: 4px;
+  right: 4px;
+  top: 11px;
+  bottom: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .16);
+}
+
+.tile .ft {
+  left: 4px;
+  bottom: 3.5px;
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, .25);
+}
+
+.tile .tag {
+  left: 6px;
+  top: 13px;
+  width: 8px;
+  height: 3.5px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+[data-v=video] .media {
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+[data-v=post] .frame {
+  inset: 0;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+[data-v=off] .tile i {
+  opacity: .6;
+}
+
+.corners {
+  display: flex;
+  gap: 6px;
+}
+
+.corners button {
+  position: relative;
+  width: 24px;
+  height: 17px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: #2c2c30;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
+  opacity: .5;
+  transition: opacity .15s, box-shadow .15s;
+}
+
+.corners button:hover {
+  opacity: .8;
+}
+
+.corners button[aria-pressed=true] {
+  opacity: 1;
+  background: #46464d;
+}
+
+.corners i {
+  position: absolute;
+  width: 8px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.dots {
+  display: flex;
+  gap: 10px;
+  padding: 2px;
+}
+
+.dots button {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: var(--c);
+  box-shadow: 0 0 0 2px transparent;
+  transition: box-shadow .15s;
+}
+
+.dots button[aria-pressed=true] {
+  box-shadow: 0 0 0 2px #0e0e0e, 0 0 0 3.5px #f1efe8;
+}
+
+h1 {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 3px;
+}
+
+p {
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 9px 0;
+}
+
+input[type=text], input[type=password] {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 34px;
+  background: rgba(255, 255, 255, .07);
+  border: .5px solid rgba(255, 255, 255, .2);
+  border-radius: 8px;
+  color: #f1efe8;
+  padding: 0 10px;
+  font: 13px ui-monospace, Consolas, monospace;
+  letter-spacing: .4px;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.primary {
+  height: 34px;
+  border: 0;
+  background: #f1efe8;
+  color: #111;
+  font-weight: 600;
+  padding: 0 14px;
+}
+
+.seg {
+  display: flex;
+  gap: 2px;
+  background: rgba(255, 255, 255, .07);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.seg button {
+  height: 22px;
+  border: 0;
+  background: none;
+  color: #a9a69d;
+  padding: 0 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+}
+
+.seg button[aria-pressed=true] {
+  background: rgba(255, 255, 255, .16);
+  color: #f1efe8;
+}
+
+.seg button.busy {
+  position: relative;
+  color: transparent;
+}
+
+.seg button.busy::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid #f1efe8;
+  border-right-color: transparent;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.small {
+  height: 24px;
+  min-width: 26px;
+  border: 0;
+  background: rgba(255, 255, 255, .1);
+  color: #f1efe8;
+  padding: 0 8px;
+}
+
+.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #8fcbea;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+a.link {
+  cursor: pointer;
+}
+
+.quiet {
+  color: #a9a69d;
+}
+
+/* a short note that belongs to the setting right above it */
+.hint {
+  margin: -6px 0 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.err {
+  color: #f09595;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.hr {
+  height: .5px;
+  background: rgba(255, 255, 255, .1);
+  margin: 10px 0;
+}
+
+.mono {
+  font: 12px ui-monospace, Consolas, monospace;
+}
+
+input[type=range] {
+  width: 120px;
+  accent-color: #2aa6e0;
+}
+
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows .22s ease, opacity .22s ease;
+}
+
+.reveal.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.reveal > div {
+  overflow: hidden;
+}
+
+.reveal .row:first-child {
+  margin-top: 0;
+}
+
+.reveal .row:last-child {
+  margin-bottom: 0;
+}
+
+.none {
+  font-style: italic;
+  color: #a9a69d;
+}
+
+.card.glass {
+  background: #161618;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(226, 75, 74, .14);
+  color: #f3a6a6;
+  font-size: 12px;
+}
+
+.notice .link {
+  flex: none;
+  color: #f1efe8;
+  font-weight: 600;
+}
+
+.dock {
+  position: sticky;
+  bottom: -14px;
+  margin: 0 0 -14px;
+  padding: 12px 0 14px;
+  background: #161618;
+  box-shadow: 0 -10px 10px -6px #161618;
+}
+
+/* In a card too short to show much, the buttons scroll along with everything else. */
+.card.short .dock {
+  position: static;
+  box-shadow: none;
+}
+
+.bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #202023;
+}
+
+.bar button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 42px;
+  border: 0;
+  background: none;
+  color: #cfccc3;
+  padding: 0;
+  font-size: 10.5px;
+  border-radius: 7px;
+  transition: background .15s, color .15s, opacity .15s;
+}
+
+.bar button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .1);
+  color: #f1efe8;
+}
+
+.bar button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.ghost:hover {
+  background: rgba(255, 255, 255, .08);
+  color: #f1efe8;
+}
+
+.credit {
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #d9d6cd;
+  max-width: 280px;
+}
+
+select {
+  height: 24px;
+  max-width: 120px;
+  background: rgba(255, 255, 255, .07);
+  border: .5px solid rgba(255, 255, 255, .2);
+  border-radius: 6px;
+  color: #f1efe8;
+  font-size: 12px;
+  color-scheme: dark;
+}
+
+input[type=color] {
+  width: 40px;
+  height: 22px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.credits {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d9d6cd;
+  white-space: pre-line;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.credits b {
+  color: #f1efe8;
+  font-weight: 600;
+}
+
+.credits p {
+  margin: 0 0 6px;
+}
+
+.support-link {
+  min-height: 28px;
+  margin-bottom: 8px;
+}
+
+#copyReport {
+  margin-top: 10px;
+}
+
+#copyResult:not(:empty) {
+  margin-top: 6px;
+}
+
+#report {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  resize: none;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .2);
+  border-radius: 8px;
+  color: inherit;
+  font: 12px/1.45 ui-monospace, Consolas, monospace;
+  user-select: text;
+}
+
+#report::selection {
+  background: #246487;
+  color: #fff;
+}
+
+@media (pointer: coarse) {
+  :root {
+    font-size: 14px;
+  }
+
+  #app {
+    box-sizing: border-box;
+    padding: 4px;
+    flex-direction: column-reverse;
+  }
+
+  /* on a phone the frame is fixed to the bottom of the screen, so the pill stays put while it resizes */
+  #app.docked {
+    top: auto;
+    bottom: 0;
+  }
+
+  #app.expanded {
+    width: var(--touch-width,340px);
+  }
+
+  .pill {
+    min-height: 44px;
+    max-width: 100%;
+    padding: 8px 12px;
+  }
+
+  .card {
+    width: 100%;
+    margin: 0 0 8px;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .primary,
+  input[type=text],
+  input[type=password],
+  select,
+  .small,
+  .seg button,
+  .disc,
+  .link {
+    min-height: 44px;
+  }
+
+  input[type=text], input[type=password] {
+    font-size: 16px;
+  }
+
+  .disc {
+    margin-top: 8px;
+    color: #a9a69d;
+    font-size: 14px;
+  }
+
+  .small {
+    min-width: 32px;
+    padding: 0 6px;
+  }
+
+  .seg button {
+    padding: 0 10px;
+  }
+
+  .row {
+    margin: 10px 0;
+  }
+
+  input[type=range] {
+    min-height: 44px;
+    max-width: 45%;
+  }
+
+  .tiles button, .corners button, .dots button {
+    min-height: 44px;
+    min-width: 36px;
+    font-size: 12px;
+  }
+
+  .link {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .bar button {
+    height: 52px;
+    font-size: 12px;
+  }
+
+  .dock {
+    bottom: -16px;
+    padding-bottom: 16px;
+    margin-bottom: -16px;
+  }
+
+  .credit {
+    display: none;
+  }
+
+  .deck {
+    align-self: stretch;
+  }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <button class="pill glass" id="pill" type="button" aria-expanded="false" aria-controls="card">
+    <img class="logo" src="/images/jg-icon.png" alt="" width="22" height="22"><span class="dot" id="dot"></span><span class="txt" id="label">Loading…</span><span class="chev" id="chev"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5l3 3 3-3"/></svg></span>
+  </button>
+  <div class="credit glass txt anim" id="credit" hidden></div>
+
+  <div class="deck" id="deck">
+  <section class="card glass anim" id="card" hidden>
+    <div id="panelControls">
+    <div class="row" style="margin:0">
+      <button class="link support-link" id="openTroubleshooting" type="button">Troubleshooting</button>
+      <a class="link support-link" id="viewSource" target="_blank" rel="noopener noreferrer" hidden>View source</a>
+    </div>
+    <form id="connect" hidden>
+      <h1 id="connectTitle">Sync your Handy</h1>
+      <p class="sub" id="keyHelp" style="margin-bottom:12px">Enter the connection key from the Handy app.</p>
+      <div style="display:flex;gap:8px"><input type="text" id="key" placeholder="R4nd0mK3y" aria-label="Connection key" autocomplete="off" spellcheck="false"><button class="primary" id="go">Connect</button></div>
+      <div class="err" id="connectErr" role="alert" hidden></div>
+      <div class="row" id="handyLinks" style="margin-bottom:0;margin-top:12px"><a class="link" href="https://intercom.help/ohdoki/en/collections/5674866-getting-started" target="_blank" rel="noopener">New to Handy?</a><a class="link" href="https://www.thehandy.com/?ref=johnny_guides&amp;utm_source=johnny_guides&amp;utm_medium=affiliate&amp;utm_campaign=General+Affiliate+program&amp;tap_s=10629959-8bfa33" target="_blank" rel="sponsored noopener">Buy a Handy</a></div>
+    </form>
+
+    <div id="status" hidden>
+      <div class="row" style="margin-top:0;align-items:flex-start"><span class="quiet">Script</span><span class="right"><span class="txt" id="scriptName" style="max-width:148px">-</span><a class="link txt by" id="by" target="_blank" rel="noopener noreferrer" hidden></a></span><button class="icon" id="gear" type="button" aria-expanded="false" aria-controls="drawer" aria-label="Settings" title="Settings"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="1.7"/><path d="M6 1v1.4M6 9.6V11M1 6h1.4M9.6 6H11M2.5 2.5l1 1M8.5 8.5l1 1M2.5 9.5l1-1M8.5 3.5l1-1"/></svg></button></div>
+      <div class="row"><span class="quiet">Offset</span><span style="display:flex;gap:4px;align-items:center"><button class="small" id="minus2" type="button" aria-label="250 ms earlier" title="250 ms earlier">«</button><button class="small" id="minus" type="button" aria-label="25 ms earlier" title="25 ms earlier">−</button><span class="mono" id="offset" style="min-width:52px;text-align:center">0 ms</span><button class="small" id="plus" type="button" aria-label="25 ms later" title="25 ms later">+</button><button class="small" id="plus2" type="button" aria-label="250 ms later" title="250 ms later">»</button></span></div>
+      <div class="row"><span class="quiet" title="How much of the Handy’s length the strokes use">Range</span><span style="display:flex;gap:8px;align-items:center"><input type="range" id="stroke" min="20" max="100" step="5" value="100" aria-label="Stroke range" style="width:96px"><span class="mono" id="strokeTxt" style="min-width:34px;text-align:right">Full</span></span></div>
+      <div class="row"><span class="quiet">Filler</span><span class="seg" id="filler" role="group" aria-label="Filler strokes where the script pauses"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></span></div>
+      <div class="reveal" id="fillerRow"><div><div class="row"><span class="quiet">Intensity</span><input type="range" id="fillerLevel" min="10" max="100" step="10" value="50" aria-label="Filler intensity"></div>
+      <div class="row"><span class="quiet" title="Fill only pauses longer than this">Fill pauses after</span><select id="fillerAfter" aria-label="Fill pauses longer than"><option value="">1.2 s</option><option value="1">1 s</option><option value="2">2 s</option><option value="3">3 s</option><option value="5">5 s</option><option value="10">10 s</option></select></div></div></div>
+      <div id="ocBox" hidden><div class="row"><span class="quiet">Handy 2 Pro overclocked</span><span class="seg" id="oc" role="group" aria-label="Play the Handy 2 Pro overclocked script"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></span></div>
+      <div class="quiet" style="font-size:11px;margin:-4px 0 8px">Only for a Handy 2 Pro with slider overclocking. Every other Handy plays the standard script.</div></div>
+      <!-- settings. place() moves this beside the card when the player is short and wide -->
+      <div class="fold" id="drawerFold"><div><section id="drawer" aria-label="Settings">
+      <div class="tabs" role="tablist" aria-label="Settings"><button type="button" role="tab" data-tab="play" aria-controls="tab-play">Playback</button><button type="button" role="tab" data-tab="look" aria-controls="tab-look">Look</button><button type="button" role="tab" data-tab="device" aria-controls="tab-device">Device</button></div>
+      <div class="tab" id="tab-play" role="tabpanel">
+      <div class="row"><span class="quiet">Inverse</span><span class="seg" id="inverse" role="group" aria-label="Invert script positions"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></span></div>
+      <div class="row"><span class="quiet" title="What the seek bar shows of the script while you hover it">Seek preview</span><span class="seg" id="preview" role="group" aria-label="Seek preview"><button type="button" data-v="around" title="The waves around the pointer">Around</button><button type="button" data-v="whole" title="The whole script along the bar">Whole</button><button type="button" data-v="off">Off</button></span></div>
+      </div>
+      <div class="tab" id="tab-look" role="tabpanel" hidden>
+      <div class="row" style="margin-top:4px"><span class="quiet">Badge</span><span class="tiles" id="marks" role="group" aria-label="Badge on videos that have a script"><button type="button" data-v="video" title="Outline around the video" aria-label="Badge, outline around the video"><span class="tile"><i class="av"></i><i class="ln"></i><i class="media"></i><i class="ft"></i><i class="tag"></i></span></button><button type="button" data-v="post" title="Outline around the post" aria-label="Badge, outline around the whole post"><span class="tile"><i class="frame"></i><i class="av"></i><i class="ln"></i><i class="media"></i><i class="ft"></i><i class="tag"></i></span></button><button type="button" data-v="off" title="No badge" aria-label="No badge"><span class="tile"><i class="av"></i><i class="ln"></i><i class="media"></i><i class="ft"></i></span></button></span></div>
+      <div class="reveal" id="badgeRows"><div>
+      <div class="row"><span class="quiet">Position</span><span class="corners" id="corner" role="group" aria-label="Badge position"><button type="button" data-v="tl" aria-label="Top left"><i style="left:3px;top:3px"></i></button><button type="button" data-v="tr" aria-label="Top right"><i style="right:3px;top:3px"></i></button><button type="button" data-v="bl" aria-label="Bottom left"><i style="left:3px;bottom:3px"></i></button><button type="button" data-v="br" aria-label="Bottom right"><i style="right:3px;bottom:3px"></i></button></span></div>
+      <div class="row"><span class="quiet">Outline</span><input type="range" id="outline" min="0" max="100" step="5" value="25" aria-label="How much of the outline to draw"></div>
+      </div></div>
+      <div class="row"><span class="quiet">Colour</span><span class="dots" id="color" role="group" aria-label="Badge colour"><button type="button" data-v="blue" aria-label="Blue" title="Blue" style="--c:#2b7bff"></button><button type="button" data-v="pink" aria-label="Pink" title="Pink" style="--c:#e70d9e"></button></span></div>
+      </div>
+      <div class="tab" id="tab-device" role="tabpanel" hidden></div>
+      </section></div></div>
+      <div id="extrasSlot"></div>
+      <div class="dock"><div class="notice" id="notice" hidden><span id="statusErr" role="alert"></span><button class="link" id="retry" type="button">Retry</button></div><div class="bar" role="group" aria-label="Sync controls"><button type="button" id="hold"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path id="holdIcon" d="M4 2.5v7M8 2.5v7"/></svg><span id="holdTxt">Pause Handy</span></button><button type="button" id="disconnect" title="Disconnect your Handy"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M7 8.5l-1 1A2.5 2.5 0 0 1 2.5 6l1-1M1.5 1.5l9 9"/></svg>Disconnect</button><button type="button" class="close" title="Quit sync on this page"><svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 1.5v4"/><path d="M3.2 3.2a4 4 0 1 0 5.6 0"/></svg>Quit sync</button></div></div>
+    </div>
+
+    <section id="usagePrompt" aria-labelledby="usageTitle" hidden>
+      <h1 id="usageTitle" tabindex="-1">Wanna help make JG Sync better?</h1>
+      <p class="sub" id="usageIntro">Send me anonymous usage counts, like which settings you change, so I know what to improve.</p>
+      <p class="sub" id="usageDetails" hidden>It’s completely anonymous, and it’s worth gold to me as a dev.</p>
+      <div class="usage-actions">
+        <button class="small" id="usageYes" type="button">Yeah, sure</button>
+        <button class="small" id="usageNo" type="button">No</button>
+      </div>
+    </section>
+
+    <div id="settingsSlot">
+      <button class="disc" id="settingsDisc" type="button" aria-expanded="false" aria-controls="settingsFold">Settings</button>
+      <div class="fold" id="settingsFold"><div>
+        <div class="row"><label class="quiet" for="device">Device</label><select id="device"><option value="handy">Handy</option><option value="autoblow">Autoblow Ultra (beta)</option></select></div>
+        <div class="row" id="shareRow" hidden><span class="quiet">Remember across sites</span><span class="seg" id="share" role="group" aria-label="Remember across sites"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></span></div>
+        <p class="sub hint" id="shareHelp" hidden>Your browser may ask for storage access first.</p>
+        <div class="row"><span class="quiet">Help improve JG Sync</span><span class="seg" id="usage" role="group" aria-label="Help improve JG Sync (feature use, no personal data)"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></span></div>
+        <p class="sub hint">Anonymous, no personal data · <a class="link" href="/privacy" target="_blank" rel="noopener">Privacy</a></p>
+        <p class="sub" id="deviceHelp" hidden>Beta: hardware playback is not verified. <a class="link" href="https://developers.autoblow.com/" target="_blank" rel="noopener noreferrer">Find your device token</a>.</p>
+        <div class="err" id="settingsErr" role="alert" hidden></div>
+      </div></div>
+    </div>
+    <!-- subtitles and credits work without a toy, render() puts this in whichever card is showing -->
+    <div id="extras">
+      <div id="subsBox" hidden>
+        <div class="row"><span class="quiet">Subtitles</span><span class="seg" id="subs" role="group" aria-label="Subtitles on the video"><button type="button" data-v="on">On</button><button type="button" data-v="off">Off</button></span></div>
+        <div class="row" id="langRow" hidden><span class="quiet">Language</span><select id="subsLang" aria-label="Subtitle language"></select></div>
+        <button class="disc" id="lookDisc" type="button" aria-expanded="false" aria-controls="lookFold"><span>Subtitle style</span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5l3 3 3-3"/></svg></button>
+        <div class="fold" id="lookFold"><div>
+          <div class="row"><span class="quiet">Colour</span><input type="color" id="subColor" aria-label="Subtitle colour"></div>
+          <div class="row"><span class="quiet">Size</span><input type="range" id="subSize" min="50" max="200" step="10" aria-label="Subtitle size"></div>
+          <div class="row"><span class="quiet">Text</span><input type="range" id="subText" min="10" max="100" step="5" aria-label="Subtitle text opacity"></div>
+          <div class="row"><span class="quiet">Background</span><input type="range" id="subBack" min="0" max="100" step="5" aria-label="Subtitle background opacity"></div>
+          <div class="row"><span class="quiet">Place</span><span class="seg" id="subPlace" role="group" aria-label="Subtitle placement"><button type="button" data-v="bottom">Bottom</button><button type="button" data-v="top">Top</button></span></div>
+          <div class="row"><span class="quiet">Height</span><input type="range" id="subLift" min="0" max="45" step="1" aria-label="Subtitle distance from the edge"></div>
+          <div class="row"><span class="quiet">Timing</span><span style="display:flex;gap:6px;align-items:center"><input type="range" id="subDelay" min="-500" max="500" step="50" aria-label="Subtitle timing" style="width:90px"><span class="mono" id="subDelayTxt" style="min-width:52px;text-align:right">0 ms</span></span></div>
+        </div></div>
+      </div>
+      <button class="disc" id="creditsDisc" type="button" aria-expanded="false" aria-controls="creditsFold" hidden><span>Credits</span><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5l3 3 3-3"/></svg></button>
+      <div class="fold" id="creditsFold"><div><div class="credits" id="creditsList"></div></div></div>
+    </div>
+    </div>
+    <section id="troubleshooting" aria-labelledby="troubleshootingTitle" hidden>
+      <button class="link support-link" id="backFromTroubleshooting" type="button">Back to sync</button>
+      <h1 id="troubleshootingTitle" tabindex="-1">Troubleshooting</h1>
+      <p class="sub">Send me the report on any platform or email me at <a class="link" href="mailto:johnnyguides.feedback@gmail.com">johnnyguides.feedback@gmail.com</a>.</p>
+      <button class="primary" id="copyReport" type="button">Copy report</button>
+      <p class="sub" id="copyResult" role="status"></p>
+      <textarea id="report" aria-label="Troubleshooting report" rows="11" readonly spellcheck="false"></textarea>
+    </section>
+  </section>
+  </div>
+</div>
+<button class="pill glass" id="failed" type="button" style="margin:4px" hidden>JG Sync didn’t load. Retry</button>
+<script src="autoblow.js"></script>
+<script id="panelCode" type="text/plain">
+'use strict';
+
+// The Handy app ID and allowed sites come from this commit's config.json.
+const CFG = window.JG_SYNC_CONFIG;
+const PROTOCOL = 1;
+const REPORT_ERROR_CODES = new Set(['access', 'busy', 'unavailable', 'offline', 'connect', 'script', 'setup', 'play', 'stroke', 'stop']);
+const reportErrors = new Set();
+const API = 'https://www.handyfeeling.com/api/handy-rest/v3';
+const HOSTING = 'https://www.handyfeeling.com/api/hosting/v2/upload';
+
+const $ = (id) => document.getElementById(id);
+const hex = (bytes) => [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+
+// Settings are saved in localStorage, which the browser keeps separate per video site.
+// With "Remember across sites" on they also go into cookies for this page, shared by all sites.
+const COOKIE_SCOPE = 'Path=/sync/panel; Secure; SameSite=None';
+
+const cookie = (k) => {
+  try {
+    const found = document.cookie.match('(?:^|; )' + k.replace('.', '_') + '=([^;]*)');
+    return found ? decodeURIComponent(found[1]) : null;
+  } catch {
+    return null;
+  }
+};
+
+// can we set cookies here at all, without asking for storage access?
+const cookiesWork = (() => {
+  try {
+    document.cookie = `jg_t=1; ${COOKIE_SCOPE}`;
+    const ok = /(?:^|; )jg_t=1/.test(document.cookie);
+    document.cookie = `jg_t=; Max-Age=0; ${COOKIE_SCOPE}`;
+    return ok;
+  } catch {
+    return false;
+  }
+})();
+
+// "Remember across sites" is off for this site: the shared cookies aren't read or written here
+let sharingOff = (() => {
+  const noSharedKey = !cookie('jg.key') && !cookie('jg.autoblow');
+  try {
+    const saved = localStorage.getItem('jg.noshare');
+    if (saved === '1') return true;
+    if (saved === '0') return false;
+    return noSharedKey;
+  } catch {
+    return noSharedKey;
+  }
+})();
+
+const noShare = {
+  get: () => sharingOff,
+
+  set(off) {
+    // the variable holds for this panel even if localStorage is blocked
+    sharingOff = off;
+    try {
+      localStorage.setItem('jg.noshare', off ? '1' : '0');
+      return true;
+    } catch {
+      return false;
+    }
+  },
+};
+
+const viaCookie = () => !noShare.get();
+
+const store = {
+  get(k) {
+    const fromCookie = viaCookie() ? cookie(k) : null;
+    if (fromCookie != null) return fromCookie;
+
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  },
+
+  set(k, v) {
+    const name = k.replace('.', '_');
+    try {
+      if (viaCookie()) {
+        document.cookie = v == null
+          ? `${name}=; Max-Age=0; ${COOKIE_SCOPE}`
+          : `${name}=${encodeURIComponent(v)}; Max-Age=31536000; ${COOKIE_SCOPE}`;
+      }
+    } catch {}
+
+    try {
+      if (v == null) localStorage.removeItem(k);
+      else localStorage.setItem(k, v);
+    } catch {}
+  },
+};
+
+// this tab only
+const ss = {
+  get(k) {
+    try {
+      return sessionStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  },
+
+  set(k, v) {
+    try {
+      if (v == null) sessionStorage.removeItem(k);
+      else sessionStorage.setItem(k, v);
+    } catch {}
+  },
+};
+
+// saved numbers get range-checked before they're used
+const clamp = (value, min, max, fallback) => {
+  const n = value == null || value === '' ? NaN : Number(value);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+
+const savedChoice = (k, choices, fallback) => {
+  const value = store.get(k);
+  return choices.includes(value) ? value : fallback;
+};
+
+let host = null;
+let hostOrigin = null;
+
+let device = store.get('jg.device') === 'autoblow' ? 'autoblow' : 'handy';
+let autoblow = null;
+const deviceKey = () => (device === 'handy' ? 'jg.key' : 'jg.autoblow');
+const deviceName = () => (device === 'handy' ? 'Handy' : 'Autoblow');
+let key = store.get(deviceKey()) || '';
+
+let releaseControl = null;
+let controlName = '';
+
+// One tab per toy. Locks only see tabs on the same video site, but that's the common case.
+async function claimControl(k, live) {
+  if (!navigator.locks || !crypto.subtle) return;
+
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(device + ':' + k));
+  const hash = hex(new Uint8Array(digest));
+  live();
+
+  if (controlName === hash) return;
+  if (releaseControl) throw new Error('Disconnect the current device first.');
+
+  await new Promise((resolve, reject) => {
+    const whileHeld = (lock) => {
+      live();
+      if (!lock) {
+        reject(new Error('Another tab is connected. Disconnect there first.'));
+        return;
+      }
+
+      // The browser keeps the lock until the promise returned here settles,
+      // and releaseControl() is what settles it.
+      controlName = hash;
+      return new Promise((done) => {
+        releaseControl = () => {
+          controlName = '';
+          releaseControl = null;
+          done();
+        };
+        resolve();
+      });
+    };
+
+    navigator.locks.request('jg-sync-' + hash, { ifAvailable: true }, whileHeld).catch(reject);
+  });
+}
+
+// A positive offset makes the toy move later than the video. jg.offset is the old name of
+// this setting and counted the other way round.
+const savedDelay = store.get('jg.delay');
+let offsetMs = savedDelay != null
+  ? clamp(savedDelay, -3000, 3000, 0)
+  : -clamp(store.get('jg.offset'), -3000, 3000, 0);
+offsetMs = Math.round(offsetMs) || 0;
+
+let stroke = clamp(store.get('jg.stroke'), 20, 100, 100);
+
+// Earlier versions had a single badge setting (full, half, corner, badge or off). Now the
+// badge is on or off, and outline says how much of the outline to draw.
+const oldMarks = store.get('jg.marks');
+const oldOutline = { full: 100, half: 50, corner: 25, badge: 0 }[oldMarks];
+let marks = oldMarks === 'off' ? 'off' : 'on';
+let outline = clamp(store.get('jg.outline') ?? oldOutline ?? 75, 0, 100, 75);
+let area = store.get('jg.area') === 'post' ? 'post' : 'video';
+let corner = savedChoice('jg.corner', ['tl', 'tr', 'bl', 'br'], 'tr');
+let color = store.get('jg.color') === 'blue' ? 'blue' : 'pink';
+let preview = savedChoice('jg.preview', ['around', 'whole', 'off'], 'whole');
+
+let filler = store.get('jg.filler') === 'on';
+let fillerLevel = Math.round(clamp(store.get('jg.fillerLevel'), 10, 100, 50) / 10) * 10;
+// in seconds, and empty for the default of 1.2 s
+let fillerAfter = savedChoice('jg.fillerAfter', ['1', '2', '3', '5', '10'], '');
+let inverse = store.get('jg.inverse') === 'on';
+let oc = store.get('jg.oc') === 'on';
+
+// Stays empty until the viewer picks On or Off themselves.
+let subsChoice = savedChoice('jg.subs', ['on', 'off'], '');
+let subsLang = store.get('jg.subsLang') || '';
+
+const savedLook = (() => {
+  try {
+    return JSON.parse(store.get('jg.subLook')) || {};
+  } catch {
+    return {};
+  }
+})();
+
+// Sizes and opacities are percentages, lift is how far from the edge (also %), delay is in ms.
+let look = {
+  color: /^#[0-9a-f]{6}$/i.test(savedLook.color) ? savedLook.color : '#ffffff',
+  size: clamp(savedLook.size, 50, 200, 100),
+  text: clamp(savedLook.text, 10, 100, 100),
+  back: clamp(savedLook.back, 0, 100, 50),
+  place: savedLook.place === 'top' ? 'top' : 'bottom',
+  lift: clamp(savedLook.lift, 0, 45, 10),
+  delay: clamp(savedLook.delay, -500, 500, 0),
+};
+
+// Empty as well until it's picked. A Top saved before this became its own setting counts as picked.
+let placeChoice = savedChoice('jg.subPlace', ['top', 'bottom'], look.place === 'top' ? 'top' : '');
+
+// scripts.json once it has loaded
+let scripts = null;
+let entry = null;
+let setupFor = '';
+
+// Handy's server time minus ours, in ms.
+let clock = 0;
+
+// connect, connecting, ready, offline or error
+let phase = 'connect';
+let error = '';
+let open = true;
+
+// The last report from inject.js, and when it came in.
+let host$ = { postId: null, mediaId: null, t: 0, paused: true, waiting: false, rate: 1 };
+let hostAt = 0;
+
+// inject.js speaks another protocol version than this file
+let stale = false;
+
+// How many px the page lets the panel take, down and across. 0 as long as that's unknown.
+let room = 0;
+let roomW = 0;
+
+let shared = !noShare.get() && (cookiesWork || !document.hasStorageAccess);
+
+// Pause is remembered per run. inject.js puts the run id in the frame URL, so the pause
+// survives the frame being moved (which reloads it).
+const run = (/^#run=([a-z0-9]{1,20})$/.exec(location.hash) || [])[1];
+let held = false;
+
+// 'user' when the viewer paused it themselves. Only that kind of pause lifts again when
+// they press play on the video.
+let holdBy = '';
+
+if (run) {
+  // start paused, and only unpause if sessionStorage works and says we weren't
+  held = true;
+  try {
+    const name = 'jg.held.' + run;
+    const saved = sessionStorage.getItem(name) ?? '0';
+    sessionStorage.setItem(name, saved);
+    held = sessionStorage.getItem(name) !== '0';
+  } catch {}
+}
+
+// A play was sent and no stop has succeeded since.
+let moving = false;
+
+// The play the toy last acknowledged, for the drift checks.
+let playing = false;
+let playT = 0;
+let playAt = 0;
+let playRate = 1;
+let playOffset = 0;
+// that play started at 0 instead of at a negative script time
+let playClamped = false;
+
+// When the video's time stopped moving although it wasn't paused.
+let stuckAt = 0;
+
+// the last range change didn't reach the toy
+let strokeBad = false;
+
+let serviceIssue = '';
+let stopUnconfirmed = false;
+let serviceStopping = false;
+
+let chain = Promise.resolve();
+let gen = 0;
+let conn = 0;
+let stopTry = 0;
+
+// cancel() aborts pending plays and setups so a stop doesn't have to wait behind them.
+// Stops and range changes don't get aborted.
+let ctl = new AbortController();
+const cancel = () => {
+  ctl.abort();
+  ctl = new AbortController();
+};
+
+// fetch with a timeout that also covers reading the body
+async function request(url, options = {}, signal = ctl.signal, ms = 6000, json = true) {
+  const abort = new AbortController();
+  const stop = () => abort.abort();
+  const timer = setTimeout(stop, ms);
+  if (signal?.aborted) stop();
+  signal?.addEventListener('abort', stop, { once: true });
+
+  const toHandy = url.startsWith('https://www.handyfeeling.com/');
+
+  try {
+    const res = await fetch(url, { ...options, signal: abort.signal });
+    const text = await res.text();
+
+    let data = text;
+    if (json) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        if (res.ok) throw new Error('Invalid response');
+        data = {};
+      }
+    }
+
+    if (toHandy) {
+      if (res.status === 401 || res.status === 403) throw Object.assign(new Error('Handy denied app access.'), { service: 'access' });
+      if (res.status === 429) throw Object.assign(new Error('Too many requests. Retry in a minute.'), { service: 'busy' });
+      if (res.status >= 500) throw Object.assign(new Error('Handy unavailable.'), { service: 'unavailable' });
+    }
+
+    return { res, data };
+  } catch (e) {
+    if (signal?.aborted || e.service || !toHandy) throw e;
+    throw Object.assign(new Error('Can’t reach Handy.'), { service: 'unavailable' });
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener('abort', stop);
+  }
+}
+
+// ---- usage counts (opt-in) ----
+// usage stays null, and nothing is counted, unless the viewer said yes
+let usageChoice = store.get('jg.usage');
+let usageDetails = false;
+
+const newUsage = () => ({
+  session: hex(crypto.getRandomValues(new Uint8Array(16))),
+  toy: 'none',
+  video: false,
+  connected: false,
+  script_found: false,
+  synced_s: 0,
+  pauses: 0,
+  seeks: 0,
+  settings_opened: 0,
+  settings: {},
+  subs_offered: false,
+  subs_on: false,
+  subs_lang: undefined,
+  subs_pos: undefined,
+  burned_in: [],
+  overclocked: false,
+  errors: new Set(),
+});
+
+let usage = usageChoice === 'on' ? newUsage() : null;
+let usageSent = 0;
+
+const bump = (name) => {
+  if (usage) usage.settings[name] = (usage.settings[name] || 0) + 1;
+};
+const fault = (code) => {
+  if (REPORT_ERROR_CODES.has(code)) reportErrors.add(code);
+  usage?.errors.add(code);
+};
+
+function chooseUsage(value) {
+  usageChoice = value;
+  store.set('jg.usage', value);
+
+  if (value === 'off') {
+    usage = null;
+  } else if (!usage) {
+    // said yes in the middle of a session, so start from how things are right now
+    usage = newUsage();
+    usage.video = Boolean(host$.postId || host$.mediaId);
+    usage.connected = phase === 'ready';
+    if (usage.connected || phase === 'connecting') usage.toy = device;
+    usage.script_found = Boolean(entry);
+    usage.subs_offered = langs().length > 0;
+    usage.burned_in = burned();
+    if (subsFor) {
+      usage.subs_on = true;
+      usage.subs_lang = subLang();
+      usage.subs_pos = placeNow();
+    }
+    usageSent = 0;
+  }
+
+  render();
+}
+
+function sendUsage() {
+  if (!usage || !hostOrigin || !navigator.sendBeacon) return;
+
+  usageSent = Date.now();
+  if (subsFor) usage.subs_pos = placeNow();
+
+  // goes to johnnyguides.com like this frame, so the video site's CSP can't block it
+  try {
+    const { errors, ...counts } = usage;
+    const report = { ...counts, platform: site(), errors: [...errors] };
+    navigator.sendBeacon('/sync/usage', JSON.stringify(report));
+  } catch {}
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') sendUsage();
+});
+
+// ---- Handy ----------------
+async function handy(path, body, k = key, keep = false, signal = ctl.signal) {
+  const headers = { 'X-Connection-Key': k, 'X-Api-Key': CFG.appId };
+  if (body) headers['Content-Type'] = 'application/json';
+
+  const options = {
+    method: body ? 'PUT' : 'GET',
+    headers,
+    body: body && JSON.stringify(body),
+  };
+  // With keep the request goes out without a signal, so cancel() can't abort it.
+  const { res, data } = await request(API + path, options, keep ? null : signal);
+
+  if (!res.ok || data.error) {
+    const failure = data.error;
+    const notConnected = failure && failure.connected === false || /NotConnected/i.test(failure && failure.name || '');
+    if (notConnected) throw Object.assign(new Error('offline'), { offline: true });
+
+    const reason = failure && (failure.message || failure.name) || 'HTTP ' + res.status;
+    throw Object.assign(new Error('Handy: ' + reason), { handyError: failure, status: res.status });
+  }
+
+  return data.result ?? data;
+}
+
+const queue = (fn) => {
+  chain = chain.catch(() => {}).then(fn);
+  return chain;
+};
+
+// Handy starts a script against its own server clock, so work out how far ours is off.
+async function syncClock(signal) {
+  const rounds = 8;
+  let sum = 0;
+
+  for (let i = 0; i < rounds; i++) {
+    const sent = Date.now();
+    const { res, data } = await request(API + '/servertime', {}, signal);
+    const received = Date.now();
+    if (!res.ok || !Number.isFinite(data.server_time)) {
+      throw Object.assign(new Error('Handy unavailable.'), { service: 'unavailable' });
+    }
+
+    // assuming the answer took as long as the question
+    sum += data.server_time + (received - sent) / 2 - received;
+  }
+
+  clock = sum / rounds;
+}
+
+// conn goes up on Disconnect, Quit or a newer connect. An older attempt sees that and gives up.
+async function connect() {
+  const c = ++conn;
+  const k = key;
+  const signal = ctl.signal;
+  const live = () => {
+    if (c !== conn) throw Object.assign(new Error('cancelled'), { cancelled: true });
+  };
+
+  phase = 'connecting';
+  error = '';
+  serviceIssue = '';
+  render();
+  if (usage) usage.toy = device;
+
+  try {
+    await claimControl(k, live);
+    live();
+
+    // a Handy may still be playing from before, it counts as moving until the stop below went through
+    moving = device === 'handy' || moving;
+
+    if (device === 'autoblow') {
+      const next = new AutoblowDevice(k, request);
+      if (!autoblow) autoblow = next;
+      await next.connect(signal);
+      live();
+      autoblow = next;
+      moving = false;
+    } else {
+      const status = await handy('/connected', null, k);
+      live();
+      if (!status.connected) throw Object.assign(new Error('offline'), { offline: true });
+
+      await syncClock(signal);
+      live();
+
+      await handy('/mode', { mode: 1 }, k);
+      live();
+
+      try {
+        await halt(k);
+      } catch (e) {
+        if (c === conn) stopUnconfirmed = true;
+        throw e;
+      }
+      live();
+
+      await applyStroke(k);
+      live();
+    }
+
+    store.set(deviceKey(), k);
+    // connected in this run: a quick reload may reconnect (see pagehide)
+    if (run) ss.set('jg.auth.' + run, '1');
+    setupFor = '';
+    phase = 'ready';
+    open = false;
+    if (usage) usage.connected = true;
+  } catch (e) {
+    if (c !== conn) return;
+
+    fault(e.offline ? 'offline' : e.service || 'connect');
+    serviceIssue = e.service || '';
+    if (!moving) releaseControl?.();
+
+    if (store.get(deviceKey()) !== key) {
+      // never connected with this key: stay on the key form
+      phase = 'connect';
+      error = e.offline ? 'No Handy found for this key. Check the key, and that your Handy is on Wi‑Fi.' : e.message;
+    } else {
+      phase = e.offline ? 'offline' : 'error';
+      error = e.offline ? '' : e.message;
+    }
+    open = true;
+  }
+
+  render();
+  if (phase === 'ready') drive();
+}
+
+// a range change that failed stays on screen with Retry
+async function applyStroke(k = key) {
+  if (device === 'autoblow') {
+    // the Autoblow's range is worked into its script, so that has to be made again
+    setupFor = '';
+    return;
+  }
+
+  const c = conn;
+  try {
+    await handy('/slider/stroke', { min: 0, max: stroke / 100 }, k, true);
+    strokeBad = false;
+  } catch (e) {
+    if (c !== conn || k !== key) return;
+
+    strokeBad = true;
+    fault('stroke');
+    if (e.service) {
+      if (phase === 'connecting') throw e;
+      await queue(() => {
+        if (c === conn && k === key && phase === 'ready') return failService(e);
+      });
+    }
+  }
+
+  render();
+}
+
+// moving only clears once the stop is confirmed, so a failed stop gets retried
+async function halt(k = key) {
+  playing = false;
+  stopTry = Date.now();
+
+  try {
+    if (device === 'autoblow') await autoblow.stop();
+    else await handy('/hssp/stop', {}, k, true);
+  } catch (e) {
+    // Handy refuses a stop before any script was set up ("Illegal state. Mode specific setup
+    // required first."). Without a script it can't be playing one, so that's fine.
+    if (!/setup required/i.test(e.message)) throw e;
+  }
+
+  moving = false;
+  stopUnconfirmed = false;
+}
+
+// Which file the toy gets. Overclocked only if the viewer picked it and this script has one.
+const playFile = () => (device === 'handy' && oc && entry.fileOc ? entry.fileOc : entry.file);
+
+// A name for what the toy would play: the file plus every setting that changes it.
+const variant = () => {
+  let name = playFile();
+
+  if (filler) {
+    name += '@' + fillerLevel;
+    if (fillerAfter) name += '/' + fillerAfter;
+  }
+  if (inverse) name += '@inverse';
+  if (device === 'autoblow') name += '@autoblow/' + stroke + '/' + host$.rate;
+
+  return name;
+};
+
+// With Filler on, the server adds the strokes (?filler=).
+const scriptUrl = () => {
+  let url = '/sync/scripts/' + encodeURIComponent(playFile());
+
+  if (filler) {
+    url += '?filler=' + fillerLevel;
+    if (fillerAfter) url += '&after=' + fillerAfter;
+  }
+  return url;
+};
+
+const invertScript = (script) => ({
+  ...script,
+  actions: script.actions.map((action) => ({ ...action, pos: 100 - action.pos })),
+});
+
+// A Handy downloads its script from a URL, so the file goes to Handy's script hosting first.
+async function hostedUrl(v, file, url, signal, live, invert) {
+  const cached = ss.get('jg.url.' + v);
+  if (cached) return cached;
+
+  const download = await request(url, {}, signal, 6000, false);
+  live();
+  if (!download.res.ok) throw new Error('Script file missing.');
+
+  let text = download.data;
+  if (invert) text = JSON.stringify(invertScript(JSON.parse(text)));
+
+  const form = new FormData();
+  form.append('file', new Blob([text], { type: 'application/json' }), file);
+
+  const upload = await request(HOSTING, { method: 'POST', body: form }, signal, 20000);
+  live();
+  if (!upload.res.ok || !upload.data.url) throw new Error('Couldn’t prepare the script. Please retry.');
+
+  ss.set('jg.url.' + v, upload.data.url);
+  return upload.data.url;
+}
+
+async function setup(g, signal) {
+  if (!entry || setupFor === variant()) return;
+
+  const v = variant();
+  const k = key;
+  const live = () => {
+    if (g !== gen || signal.aborted) throw new Error('cancelled');
+  };
+
+  if (device === 'autoblow') {
+    const { res, data } = await request(scriptUrl(), {}, signal);
+    live();
+    if (!res.ok || !Array.isArray(data.actions)) throw new Error('Script file missing.');
+
+    // speed, Inverse and range all go into the script itself
+    const actions = data.actions.map((action) => ({
+      at: Math.round(action.at / host$.rate),
+      pos: (inverse ? 100 - action.pos : action.pos) * stroke / 100,
+    }));
+    await autoblow.prepare({ actions }, signal);
+    live();
+
+    setupFor = v;
+    return;
+  }
+
+  const cached = ss.get('jg.url.' + v);
+  let url = await hostedUrl(v, playFile(), scriptUrl(), signal, live, inverse);
+  live();
+
+  try {
+    await handy('/hssp/setup', { url }, k, false, signal);
+  } catch (e) {
+    live();
+    // Handy doesn't say when a hosted script has expired. Check that the cached url is
+    // gone, then upload again once.
+    if (!cached || e.service || e.offline || e.status === 408 || e.handyError?.code === 1002) throw e;
+
+    let missing = false;
+    try {
+      const check = await request(cached, {}, signal, 6000, false);
+      missing = check.res.status === 404 || check.res.status === 410;
+    } catch {}
+    live();
+    if (!missing) throw e;
+
+    ss.set('jg.url.' + v, null);
+    url = await hostedUrl(v, playFile(), scriptUrl(), signal, live, inverse);
+    live();
+    await handy('/hssp/setup', { url }, k, false, signal);
+  }
+
+  live();
+  setupFor = v;
+}
+
+// The toy follows the video. Commands go through one queue, and a newer drive() makes the
+// older queued ones give up (gen).
+const wanted = () => Boolean(phase === 'ready' && entry && !held && !host$.paused && !host$.waiting);
+
+// the video's time right now, worked out from the last report
+const hostNow = (at) => {
+  if (host$.paused || host$.waiting) return host$.t;
+  return host$.t + (at - hostAt) / 1000 * host$.rate;
+};
+
+function drive() {
+  const want = wanted();
+  const g = ++gen;
+
+  // also cancels downloads from before any play was sent
+  if (!want && phase === 'ready') cancel();
+
+  queue(async () => {
+    if (g !== gen) return;
+
+    let sent = false;
+    try {
+      if (!want) {
+        if (moving && key && phase === 'ready') {
+          await halt();
+          error = '';
+        }
+        return;
+      }
+
+      if (setupFor !== variant()) {
+        if (moving) await halt();
+        if (g !== gen) return;
+        await setup(g, ctl.signal);
+      }
+      if (g !== gen) return;
+
+      // video time and server time are taken at the same moment, before the request
+      // (else the request's own latency looks like drift)
+      const at = Date.now();
+      const t = hostNow(at);
+      const rate = host$.rate;
+      const off = offsetMs;
+      const start = Math.round(t * 1000 - off);
+
+      // No drift checks against the old play while this one is pending.
+      moving = true;
+      sent = true;
+      playing = false;
+
+      // Not abortable. A play that's already out can't be taken back, and a stop shouldn't overtake it.
+      if (device === 'autoblow') {
+        await autoblow.play(Math.max(0, Math.round(start / rate)));
+      } else {
+        const play = {
+          start_time: Math.max(0, start),
+          server_time: Math.round(at + clock),
+          playback_rate: rate,
+          loop: false,
+        };
+        await handy('/hssp/play', play, key, true);
+      }
+
+      playing = true;
+      playT = t;
+      playAt = at;
+      playRate = rate;
+      playClamped = start < 0;
+      playOffset = off;
+      error = '';
+    } catch (e) {
+      playing = false;
+      // a newer command took over and will report
+      if (g !== gen) return;
+
+      if (e.service || e.offline) {
+        await failService(e);
+
+        // a play that timed out can still reach the toy after our stop. stop again in 5 s
+        const k = key;
+        if (sent && e.service === 'unavailable') {
+          setTimeout(() => {
+            queue(() => (held && k && k === key ? halt(k) : null)).catch(() => {});
+          }, 5000);
+        }
+      } else {
+        error = e.message;
+        open = true;
+
+        let code = 'play';
+        if (/Script file missing/.test(e.message)) code = 'script';
+        else if (/prepare the script/.test(e.message)) code = 'setup';
+        fault(code);
+
+        // the previous play may still be running, don't show an error over a moving toy
+        if (moving && key) {
+          try {
+            await halt();
+          } catch {
+            stopUnconfirmed = true;
+          }
+        }
+      }
+    } finally {
+      render();
+    }
+  });
+}
+
+async function failService(e) {
+  gen++;
+  cancel();
+  fault(e.offline ? 'offline' : e.service || 'unavailable');
+
+  serviceIssue = e.service || '';
+  phase = e.offline ? 'offline' : 'error';
+  error = e.offline ? '' : e.message;
+  held = true;
+  holdBy = '';
+  playing = false;
+  open = true;
+  if (run) ss.set('jg.held.' + run, '1');
+
+  stopUnconfirmed = moving;
+  serviceStopping = moving;
+  render();
+
+  if (moving && key) {
+    try {
+      await halt();
+    } catch {
+      stopUnconfirmed = true;
+    }
+  }
+  serviceStopping = false;
+  render();
+}
+
+// Has the video moved away from where the toy thinks it is?
+// (a seek without events, a throttled tab, a speed change)
+function drifted() {
+  if (!playing) return false;
+
+  const expected = playT + (Date.now() - playAt) / 1000 * playRate;
+  if (Math.abs(expected - host$.t) > 0.35) return true;
+  if (playRate !== host$.rate || playOffset !== offsetMs) return true;
+
+  // a start that was clamped to 0 (delay at the very beginning) needs a new play once script time reaches 0
+  return playClamped && host$.t * 1000 - offsetMs >= 0;
+}
+
+// ---- messages from inject.js ----------
+window.addEventListener('message', (e) => {
+  if (e.source !== window.parent) return;
+  if (!CFG.origins.includes(e.origin) && e.origin !== location.origin) return;
+
+  const first = !host;
+  host = e.source;
+  hostOrigin = e.origin;
+
+  const m = e.data || {};
+  if (m.type === 'shown') showCredit();
+  else if (m.type === 'played') onPlayed();
+  else if (m.type === 'state') onState(m, first);
+});
+
+// Play pressed on the video lifts the viewer's own Pause, but not a pause we set after an error.
+function onPlayed() {
+  if (!held || holdBy !== 'user' || phase !== 'ready' || error || stopUnconfirmed) return;
+
+  held = false;
+  holdBy = '';
+  if (run) ss.set('jg.held.' + run, null);
+  render();
+  drive();
+}
+
+function onState(m, first) {
+  // inject.js and this file are fetched separately, so right after an update one of them can be
+  // a few minutes behind. If the numbers differ, don't guess what the other side means.
+  // (the first bookmarklets sent no number at all, that counts as 1)
+  stale = (m.v || 1) !== PROTOCOL;
+
+  if (px(m.room) !== room || px(m.roomW) !== roomW) {
+    room = px(m.room);
+    roomW = px(m.roomW);
+    fit();
+  }
+
+  // whatever was ready before the first message
+  if (first) {
+    render();
+    sendIds();
+    heatFor = undefined;
+    sendHeat();
+    subsFor = undefined;
+    sendSubs();
+  }
+
+  const prev = host$;
+  const prevAt = hostAt;
+  const rate = rateOf(m.rate);
+  const t = sec(m.t);
+  const expected = hostNow(Date.now());
+
+  // Time not moving but not paused either (frozen decoder, stalled stream): after a second
+  // that counts as buffering (else the toy carries on over a frozen picture).
+  if (m.paused || m.waiting || t !== prev.t) stuckAt = 0;
+  else if (!stuckAt) stuckAt = Date.now();
+  const stuck = !!stuckAt && Date.now() - stuckAt > 1000;
+
+  host$ = {
+    postId: str(m.postId),
+    mediaId: str(m.mediaId),
+    t,
+    paused: !!m.paused,
+    // a speed the toy can't follow counts as buffering too
+    waiting: !!m.waiting || rate === null || stuck || stale,
+    rate: rate || 1,
+  };
+  hostAt = Date.now();
+
+  if (Number.isFinite(m.viewportWidth)) {
+    const width = Math.max(240, Math.min(380, m.viewportWidth - 16));
+    document.documentElement.style.setProperty('--touch-width', width + 'px');
+
+    // inject.js treats a touch screen under 950 px as a phone
+    $('app').classList.toggle('docked', m.viewportWidth < 950);
+  }
+
+  const changed = prev.postId !== host$.postId || prev.mediaId !== host$.mediaId;
+
+  if (usage && (host$.postId || host$.mediaId)) {
+    usage.video = true;
+    if (!changed) {
+      if (host$.paused && !prev.paused) usage.pauses++;
+
+      // a jump after reports stopped for a while is just catching up, not a seek
+      if (Math.abs(t - expected) > 2 && Date.now() - prevAt < 2000) usage.seeks++;
+    }
+  }
+
+  if (changed) pickScript();
+
+  if (changed
+    || prev.paused !== host$.paused
+    || prev.waiting !== host$.waiting
+    || (!host$.paused && !host$.waiting && drifted())) {
+    drive();
+  } else if (moving && !wanted() && phase === 'ready' && Date.now() - stopTry > 3000) {
+    // the toy should have stopped by now, so that stop failed. try it again
+    drive();
+  }
+
+  renderLabel();
+}
+
+// inject.js reports every 250 ms. If nothing came for 5 s while playing, something on the page
+// broke, so stop the toy. The next report starts it again.
+setInterval(() => {
+  if (!host$.paused && !host$.waiting && hostAt && Date.now() - hostAt > 5000) {
+    host$ = { ...host$, waiting: true };
+    drive();
+    renderLabel();
+  }
+
+  if (usage && playing && wanted()) {
+    usage.synced_s = Math.min(86400, usage.synced_s + 1);
+    if (device === 'handy' && entry.fileOc && playFile() === entry.fileOc) usage.overclocked = true;
+
+    // once a minute while syncing
+    if (Date.now() - usageSent > 60000) sendUsage();
+  }
+}, 1000);
+
+// whatever the page sends gets checked. ids are lowercase like the scripts.json keys
+const str = (v) => {
+  if (typeof v !== 'string' || !/^[a-z0-9_-]{1,40}$/i.test(v)) return null;
+  return v.toLowerCase();
+};
+const sec = (v) => (typeof v === 'number' && isFinite(v) && v >= 0 && v < 86400 ? v : 0);
+const px = (v) => (typeof v === 'number' && isFinite(v) && v >= 0 && v < 20000 ? v : 0);
+const rateOf = (v) => (typeof v === 'number' && v >= 0.25 && v <= 4 ? v : null);
+
+const post = (msg) => host && host.postMessage(msg, hostOrigin);
+
+// scripts.json keys look like of:123456 (the oldest ones have no prefix)
+const SITES = {
+  'onlyfans.com': 'of',
+  'fansly.com': 'fs',
+  'manyvids.com': 'mv',
+  'pornhub.com': 'ph',
+};
+
+const site = () => {
+  try {
+    const hostname = new URL(hostOrigin).hostname.replace(/^www\./, '');
+    return SITES[hostname] || 'jg';
+  } catch {
+    return 'jg';
+  }
+};
+
+// the ids on this site that have a script, for the badges
+const sendIds = () => {
+  if (!scripts) return;
+
+  const prefix = site() + ':';
+  const here = Object.keys(scripts).filter((id) => !id.includes(':') || id.startsWith(prefix));
+  const ids = [...new Set(here.map((id) => id.replace(/^[a-z]+:/, '')))];
+
+  post({ type: 'ids', ids, marks, outline, area, corner, preview, color });
+};
+
+// "Script by <author>" under the pill for 2.5 s, when a script loads or the pill comes back
+let creditTimer = 0;
+function showCredit() {
+  const credit = $('credit');
+  clearTimeout(creditTimer);
+
+  if (!entry || !entry.author) {
+    reveal(credit, false);
+    return;
+  }
+
+  credit.textContent = 'Script by ' + entry.author;
+  reveal(credit, true);
+  creditTimer = setTimeout(() => reveal(credit, false), 2500);
+}
+
+function pickScript() {
+  const own = (id) => (scripts && id && Object.hasOwn(scripts, id) ? scripts[id] : null);
+  const prefixed = (id) => id && site() + ':' + String(id).toLowerCase();
+
+  // prefixed ids first (another platform can have the same number), then the old bare ones
+  const next = own(prefixed(host$.mediaId))
+    || own(prefixed(host$.postId))
+    || own(host$.mediaId)
+    || own(host$.postId);
+
+  if (next !== entry) {
+    entry = next;
+    if (usage && entry) {
+      usage.script_found = true;
+      usage.subs_offered ||= langs().length > 0;
+      usage.burned_in = burned();
+    }
+    showCredit();
+    sendHeat();
+    sendSubs();
+  }
+
+  render();
+}
+
+// Subtitles go to the page as plain text cues and inject.js draws them.
+// Language: the one picked last time, else the browser's, else English, else whatever comes first.
+const langs = () => (entry && entry.subs ? Object.keys(entry.subs) : []);
+
+const langName = (code) => {
+  try {
+    const names = new Intl.DisplayNames([navigator.language || 'en'], { type: 'language' });
+    return names.of(code) || code;
+  } catch {
+    return code;
+  }
+};
+
+function subLang() {
+  const available = langs();
+  const browser = (navigator.language || '').toLowerCase();
+  const sameLanguage = (lang) => lang.split('-')[0] === browser.split('-')[0];
+
+  return available.find((lang) => lang === subsLang)
+    || available.find((lang) => lang === browser)
+    || available.find(sameLanguage)
+    || available.find((lang) => lang === 'en')
+    || available[0]
+    || '';
+}
+
+// burnedIn lists the languages already in the picture. Unless the viewer chose something:
+// a burned-in language starts Off (no double text) and any other language starts at the Top.
+const burned = () => {
+  if (!entry || !Array.isArray(entry.burnedIn)) return [];
+  return entry.burnedIn.filter((lang) => typeof lang === 'string' && /^[a-z]{2}$/.test(lang));
+};
+const isBurned = (lang) => !!lang && burned().includes(lang.split('-')[0]);
+const subsOn = () => (subsChoice ? subsChoice === 'on' : !isBurned(subLang()));
+
+const placeNow = () => {
+  if (placeChoice) return placeChoice;
+  return burned().length && !isBurned(subLang()) ? 'top' : 'bottom';
+};
+const shownLook = () => ({ ...look, place: placeNow() });
+
+// "00:01:02.345" in milliseconds
+const vttTime = (stamp) => {
+  const m = /^(\d+):(\d\d):(\d\d)\.(\d{3})$/.exec(stamp);
+  if (!m) return NaN;
+
+  const [hours, minutes, seconds, millis] = m.slice(1).map(Number);
+  return ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis;
+};
+
+// inject.js only ever sets the text as textContent, so the entities can be undone here
+function parseVtt(vtt) {
+  const plain = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  const cues = [];
+
+  for (const block of vtt.trimEnd().split('\n\n')) {
+    const [timing, ...lines] = block.split('\n');
+    const m = /^(\S+) --> (\S+)$/.exec(timing);
+    if (!m) continue;
+
+    const start = vttTime(m[1]);
+    const end = vttTime(m[2]);
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+
+    cues.push([start, end, plain(lines.join('\n'))]);
+  }
+  return cues;
+}
+
+let subsFor = null;
+function sendSubs() {
+  const lang = subLang();
+  const file = entry && subsOn() && lang ? entry.subs[lang] : null;
+  if (file === subsFor) return;
+
+  subsFor = file;
+  post({ type: 'subs', cues: null });
+  if (!file) return;
+
+  if (usage) {
+    usage.subs_on = true;
+    usage.subs_lang = lang;
+    usage.subs_pos = placeNow();
+  }
+
+  fetch('/sync/subtitles/' + encodeURIComponent(file))
+    .then((r) => {
+      if (!r.ok) throw new Error();
+      return r.text();
+    })
+    .then((vtt) => {
+      if (subsFor !== file) return;
+
+      const cues = parseVtt(vtt);
+      post({ type: 'look', look: shownLook() });
+      post({ type: 'subs', cues });
+    })
+    .catch(() => {});
+}
+
+// Credits from the script's metadata: a link top left on the video while that credit is on
+// screen, and the Credits list in the card.
+let meta = null;
+
+const creditLabel = (credit) => {
+  const role = credit.roles.find((r) => r.role === 'Script') || credit.roles[0];
+  return role ? role.role + ' by ' + role.by : credit.title;
+};
+
+const creditLink = (href, text) => {
+  if (!/^https:\/\//.test(href || '')) return document.createTextNode(text);
+
+  const a = document.createElement('a');
+  a.className = 'link';
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = text + ' ↗';
+  return a;
+};
+
+function setMeta(m) {
+  meta = m && typeof m === 'object' ? m : null;
+
+  // the server cleans uploads, but a file I put there by hand can have anything in it
+  const listed = meta && Array.isArray(meta.credits) ? meta.credits : [];
+  const credits = listed
+    .filter((c) => c && Array.isArray(c.roles) && typeof c.title === 'string')
+    .map((c) => ({
+      ...c,
+      roles: c.roles.filter((r) => r && typeof r.role === 'string' && typeof r.by === 'string'),
+    }));
+
+  const links = credits
+    .filter((c) => typeof c.url === 'string' && /^https:\/\//.test(c.url) && Array.isArray(c.shown))
+    .map((c) => ({ url: c.url, label: creditLabel(c), shown: c.shown }));
+  post({ type: 'credits', links });
+
+  const list = $('creditsList');
+  list.replaceChildren();
+
+  if (entry && entry.author) {
+    const p = document.createElement('p');
+    p.append('Script by ', creditLink(entry.source, entry.author));
+    list.append(p);
+  }
+
+  for (const credit of credits) {
+    const p = document.createElement('p');
+    const title = document.createElement('b');
+    title.append(creditLink(credit.url, credit.title));
+    p.append(title, ...credit.roles.map((r) => '\n' + r.role + ' by ' + r.by));
+    list.append(p);
+  }
+
+  const description = meta && typeof meta.description === 'string' ? meta.description : '';
+  if (!credits.length && description) {
+    const p = document.createElement('p');
+    p.textContent = description;
+    list.append(p);
+  }
+
+  render();
+}
+
+// the script as the toy plays it (with Filler and Inverse), for the seek bar preview on the page
+let heatFor = null;
+function sendHeat() {
+  const v = entry ? variant() : null;
+  const invert = inverse;
+  if (v === heatFor) return;
+
+  heatFor = v;
+  post({ type: 'heat', acts: null });
+  setMeta(null);
+  if (!v) return;
+
+  fetch(scriptUrl())
+    .then((r) => {
+      if (!r.ok) throw new Error();
+      return r.json();
+    })
+    .then((script) => {
+      if (heatFor !== v) return;
+
+      setMeta(script.metadata);
+      if (invert) script = invertScript(script);
+
+      const actions = (script.actions || [])
+        .filter((a) => Number.isFinite(a.at) && Number.isFinite(a.pos))
+        .sort((a, b) => a.at - b.at);
+      if (actions.length < 2) return;
+
+      post({ type: 'heat', acts: actions.flatMap((a) => [Math.round(a.at), Math.round(a.pos)]) });
+    })
+    .catch(() => {});
+}
+
+// ---- UI ----
+const DOT = {
+  green: '#5DCAA5',
+  blue: '#85B7EB',
+  amber: '#EF9F27',
+  red: '#E24B4A',
+  grey: '#888780',
+};
+
+function labelState() {
+  if (stale) return [DOT.amber, 'Updating… reload in a few minutes'];
+
+  if (serviceIssue) {
+    const name = deviceName();
+    const texts = {
+      access: name + ' access unavailable',
+      busy: name + ' service busy',
+      unavailable: name + ' service unavailable',
+    };
+    return [DOT.red, texts[serviceIssue]];
+  }
+
+  if (phase === 'connect') return [DOT.amber, 'Connect ' + deviceName()];
+  if (phase === 'connecting') return [DOT.blue, 'Connecting…'];
+  if (phase === 'offline') return [DOT.red, deviceName() + ' offline'];
+  if (phase === 'error') return [DOT.red, 'Can’t connect'];
+
+  if (!host$.postId && !host$.mediaId) {
+    return host$.paused ? [DOT.green, 'Ready · press play'] : [DOT.grey, 'Open the post itself to sync'];
+  }
+  if (!scripts) return [DOT.blue, 'Loading scripts…'];
+  if (!entry) return [DOT.grey, 'No script for this video'];
+
+  const title = entry.title;
+  if (error || strokeBad) return [DOT.red, title + ' · Error'];
+  if (held) return [DOT.amber, title + ' · ' + deviceName() + ' paused'];
+  if (host$.paused) return [DOT.green, title + ' · Ready'];
+  if (host$.waiting) return [DOT.blue, title + ' · Buffering'];
+  return [DOT.green, title + ' · Synced'];
+}
+
+function renderLabel() {
+  renderHold();
+
+  const [dotColor, text] = labelState();
+  $('dot').style.background = dotColor;
+
+  const label = $('label');
+  if (label.textContent !== text) {
+    // the pill slides to its new width instead of jumping
+    const pill = $('pill');
+    const widthBefore = pill.offsetWidth;
+    label.textContent = text;
+
+    // a slide that is still running would hide the new width
+    for (const running of pill.getAnimations()) running.cancel();
+    const widthAfter = pill.offsetWidth;
+
+    if (widthBefore && widthBefore !== widthAfter) {
+      if (widthAfter > widthBefore) reserve(widthAfter - widthBefore, 0);
+      pill.animate(
+        [{ width: widthBefore + 'px' }, { width: widthAfter + 'px' }],
+        { duration: 240, easing: EASE, delay: GROW_DELAY, fill: 'backwards' },
+      );
+    }
+    label.animate(
+      [{ opacity: 0.25, transform: 'translateY(2px)' }, { opacity: 1, transform: 'none' }],
+      { duration: 200, easing: 'ease-out' },
+    );
+  }
+}
+
+// one button for both: Play when the video or the toy is paused
+function renderHold() {
+  const resume = held || host$.paused;
+  $('holdTxt').textContent = resume ? 'Play' : 'Pause';
+  $('hold').title = (resume ? 'Play' : 'Pause') + ' the video and your ' + deviceName();
+  $('holdIcon').setAttribute('d', resume ? 'M3.5 2.2v7.6L9.5 6z' : 'M4 2.5v7M8 2.5v7');
+}
+
+const pressOnly = (id, value) => {
+  for (const button of $(id).querySelectorAll('button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.v === value));
+  }
+};
+
+function renderErrors(needKey) {
+  let connectError = needKey ? error : '';
+
+  let statusError = '';
+  if (!needKey) {
+    if (phase === 'offline') statusError = 'Your device is offline. Check Wi-Fi, then retry.';
+    else if (error) statusError = error;
+    else if (strokeBad && phase === 'ready') statusError = 'Your Handy didn’t take the new range.';
+  }
+
+  if (stopUnconfirmed) {
+    const warning = device === 'handy' ? ' If it’s still moving, stop it manually.' : ' If it’s still moving, power it off.';
+    if (needKey) connectError += warning;
+    else statusError += warning;
+  }
+
+  say($('connectErr'), connectError);
+  if (statusError) $('statusErr').textContent = statusError;
+  $('retry').disabled = serviceStopping;
+  slide($('notice'), !!statusError);
+}
+
+function renderDevice() {
+  const isHandy = device === 'handy';
+
+  $('shareRow').hidden = !document.requestStorageAccess && !cookiesWork;
+  slide($('shareHelp'), !$('shareRow').hidden && (shared || asking));
+  $('share').querySelector('[data-v="on"]').classList.toggle('busy', asking);
+  pressOnly('share', shared ? 'on' : 'off');
+
+  $('device').value = device;
+  $('device').disabled = phase === 'connecting' || serviceStopping;
+  slide($('deviceHelp'), !isHandy);
+  slide($('handyLinks'), isHandy);
+  $('disconnect').disabled = serviceStopping;
+
+  setText($('connectTitle'), 'Sync your ' + deviceName());
+  setText($('keyHelp'), isHandy ? 'Enter the connection key from the Handy app.' : 'Enter your Autoblow Ultra device token.');
+  $('key').setAttribute('aria-label', isHandy ? 'Connection key' : 'Device token');
+  $('key').type = isHandy ? 'text' : 'password';
+  $('key').placeholder = isHandy ? 'R4nd0mK3y' : 'Device token';
+}
+
+function renderScript() {
+  const noVideo = !host$.postId && !host$.mediaId;
+  setText($('scriptName'), entry ? entry.title : noVideo ? 'No video detected' : 'No script');
+  $('scriptName').classList.toggle('none', !entry);
+
+  const credited = entry && entry.author;
+  slide($('by'), !!credited);
+  if (credited) {
+    $('by').textContent = 'by ' + entry.author + (entry.source ? ' ↗' : '');
+    if (entry.source) $('by').href = entry.source;
+    else $('by').removeAttribute('href');
+  }
+
+  $('offset').textContent = (offsetMs > 0 ? '+' : '') + offsetMs + ' ms';
+  $('stroke').value = stroke;
+  $('strokeTxt').textContent = rangeText(stroke);
+  $('fillerLevel').value = fillerLevel;
+  $('fillerLevel').disabled = !filler;
+  $('fillerAfter').value = fillerAfter;
+  unfold($('fillerRow'), filler);
+  slide($('ocBox'), device === 'handy' && !!(entry && entry.fileOc));
+}
+
+function renderSubtitles() {
+  const available = langs();
+  // The language row is set before its box slides open, and left alone when the box slides shut.
+  if (available.length) slide($('langRow'), available.length > 1);
+  slide($('subsBox'), available.length > 0);
+
+  const select = $('subsLang');
+  if (select.dataset.for !== available.join()) {
+    select.dataset.for = available.join();
+    select.replaceChildren(...available.map((lang) => new Option(langName(lang), lang)));
+  }
+  select.value = subLang();
+
+  slide($('creditsDisc'), $('creditsList').childNodes.length > 0);
+
+  $('subColor').value = look.color;
+  $('subSize').value = look.size;
+  $('subText').value = look.text;
+  $('subBack').value = look.back;
+  $('subLift').value = look.lift;
+  $('subDelay').value = look.delay;
+  $('subDelayTxt').textContent = (look.delay > 0 ? '+' : '') + look.delay + ' ms';
+
+  pressOnly('subs', subsOn() ? 'on' : 'off');
+  pressOnly('subPlace', placeNow());
+}
+
+function render() {
+  // stays wide on a phone until the card has faded out
+  $('app').classList.toggle('expanded', open || !$('card').hidden);
+  renderLabel();
+  reveal($('card'), open);
+  $('pill').setAttribute('aria-expanded', String(open));
+
+  slide($('usagePrompt'), usageChoice !== 'on' && usageChoice !== 'off');
+  setText($('usageTitle'), usageDetails ? 'Are you sure?' : 'Wanna help make JG Sync better?');
+  slide($('usageIntro'), !usageDetails);
+  slide($('usageDetails'), usageDetails);
+  setText($('usageYes'), usageDetails ? 'Alright' : 'Yeah, sure');
+  setText($('usageNo'), usageDetails ? 'Still no' : 'No');
+
+  // A key that never connected keeps the key form up, also while connecting and after an error.
+  const fresh = store.get(deviceKey()) !== key;
+  let needKey = phase === 'connect' || fresh && (phase === 'connecting' || phase === 'error');
+
+  // A card that is fading out keeps showing what it had. reveal() renders again once it's gone.
+  const card = $('card');
+  if (!open && !card.hidden) needKey = !$('connect').hidden;
+
+  $('go').textContent = phase === 'connecting' ? 'Connecting…' : 'Connect';
+  $('go').disabled = phase === 'connecting' || serviceStopping;
+
+  // The key form and the connected card swap in one go, with nothing inside sliding on its own.
+  // The card glides to its new height afterwards.
+  const arriving = needKey ? $('connect') : $('status');
+  const heightBefore = card.offsetHeight;
+  swapping = arriving.hidden && $('troubleshooting').hidden && card.classList.contains('in');
+  const swapped = swapping;
+
+  $('connect').hidden = !needKey;
+  $('status').hidden = needKey;
+
+  // Subtitles, credits and the settings need no toy, so they sit in whichever of the two is showing.
+  const settingsHome = needKey ? $('connect') : $('tab-device');
+  if ($('settingsSlot').parentNode !== settingsHome) settingsHome.append($('settingsSlot'));
+
+  if (drawerOpen && (!open || needKey || !$('troubleshooting').hidden)) {
+    drawerOpen = false;
+    place();
+  }
+
+  const extrasHome = needKey ? $('connect') : $('extrasSlot');
+  if ($('extras').parentNode !== extrasHome) extrasHome.append($('extras'));
+
+  renderErrors(needKey);
+  renderDevice();
+  renderScript();
+  renderSubtitles();
+  pressOnly('usage', usage ? 'on' : 'off');
+  $('outline').value = outline;
+  $('hold').disabled = phase !== 'ready' || !entry;
+  unfold($('badgeRows'), marks === 'on');
+
+  swapping = false;
+  if (swapped) {
+    const heightAfter = card.offsetHeight;
+    if (heightAfter > heightBefore) reserve(0, heightAfter - heightBefore);
+
+    const timing = { duration: 220, easing: EASE, delay: GROW_DELAY, fill: 'backwards' };
+    card.animate(
+      [{ height: heightBefore + 'px', overflow: 'hidden' }, { height: heightAfter + 'px', overflow: 'hidden' }],
+      timing,
+    );
+    arriving.animate([{ opacity: 0 }, { opacity: 1 }], timing);
+  }
+
+  size();
+}
+
+// Size messages reach the page a frame or two late. So before something grows, the frame is
+// asked for the extra px, and it gives them back once the growing is over. The growing itself
+// starts GROW_DELAY ms later (the same .03s is in the CSS of the folds).
+const GROW_DELAY = 30;
+let spareWidth = 0;
+let spareHeight = 0;
+
+function reserve(width, height) {
+  spareWidth += width;
+  spareHeight += height;
+  size();
+
+  setTimeout(() => {
+    spareWidth -= width;
+    spareHeight -= height;
+    size();
+  }, 350);
+}
+
+const EASE = 'cubic-bezier(.2,.8,.2,1)';
+const sliding = new WeakMap();
+
+// true while render() swaps the key form and the connected card, which animates as one
+let swapping = false;
+
+// Rows and sections slide open and shut: the bottom margin pulls whatever comes after over the
+// element while it is clipped away and fades. One sliding shut keeps its place until it has closed.
+function slide(el, show) {
+  const running = sliding.get(el);
+  const shown = running ? running.show : !el.hidden;
+  if (shown === show) return;
+
+  if (running) {
+    running.show = show;
+    running.animation.reverse();
+    if (show) reserve(0, running.grows);
+    return;
+  }
+
+  // nothing to animate while the card is closed, or inside a part of it that isn't showing
+  const card = el.closest('.card');
+  if (swapping || !card.classList.contains('in') || !el.parentNode.getClientRects().length) {
+    el.hidden = !show;
+    return;
+  }
+
+  // Pulling the bottom margin in by the element's height takes its box out of the layout.
+  // What is then still left of it are margins that merged with its neighbours' (a first row's
+  // top margin, say). The card is measured with and without the element to find those px,
+  // and a negative top margin takes them out.
+  const inline = { top: el.style.marginTop, bottom: el.style.marginBottom };
+  const maxHeight = card.style.maxHeight;
+  const cardHeight = () => card.getBoundingClientRect().height;
+  card.style.maxHeight = 'none';
+
+  el.hidden = true;
+  const without = cardHeight();
+
+  el.hidden = false;
+  const withIt = cardHeight();
+  const height = el.offsetHeight;
+  const style = getComputedStyle(el);
+  const open = {
+    marginTop: style.marginTop,
+    marginBottom: style.marginBottom,
+    clipPath: 'inset(0 0 0 0)',
+    opacity: 1,
+  };
+
+  el.style.marginTop = '0';
+  el.style.marginBottom = -height + 'px';
+  const rest = cardHeight() - without;
+
+  el.style.marginTop = inline.top;
+  el.style.marginBottom = inline.bottom;
+  card.style.maxHeight = maxHeight;
+
+  const shut = {
+    marginTop: -rest + 'px',
+    marginBottom: -height + 'px',
+    clipPath: `inset(0 0 ${height}px 0)`,
+    opacity: 0,
+  };
+
+  const grows = withIt - without;
+  if (show) reserve(0, grows);
+
+  const animation = el.animate(show ? [shut, open] : [open, shut], {
+    duration: 220,
+    easing: EASE,
+    delay: GROW_DELAY,
+    fill: 'backwards',
+  });
+  const state = { show, animation, grows };
+  sliding.set(el, state);
+
+  animation.onfinish = () => {
+    sliding.delete(el);
+    el.hidden = !state.show;
+  };
+}
+
+// The folds open and shut in CSS, this only gets the frame ready for one that opens.
+function unfold(fold, open) {
+  if (fold.classList.contains('open') === open) return;
+
+  if (open) reserve(0, fold.firstElementChild.scrollHeight);
+  fold.classList.toggle('open', open);
+}
+
+// An error line slides open with its text, and keeps the text while it slides shut.
+function say(el, text) {
+  if (text) el.textContent = text;
+  slide(el, !!text);
+}
+
+// New text fades in, and its element eases to the new height if the text wraps differently.
+function setText(el, text) {
+  if (el.textContent === text) return;
+
+  const heightBefore = el.offsetHeight;
+  el.textContent = text;
+  const heightAfter = el.offsetHeight;
+
+  el.animate([{ opacity: 0.25 }, { opacity: 1 }], { duration: 200, easing: 'ease-out' });
+  if (heightBefore === heightAfter) return;
+
+  if (heightAfter > heightBefore) reserve(0, heightAfter - heightBefore);
+  el.animate(
+    [{ height: heightBefore + 'px', overflow: 'hidden' }, { height: heightAfter + 'px', overflow: 'hidden' }],
+    { duration: 220, easing: EASE, delay: GROW_DELAY, fill: 'backwards' },
+  );
+}
+
+// Fade in and out. The frame has to grow before something fades in,
+// and can only shrink after it's gone.
+function reveal(el, show) {
+  clearTimeout(el._t);
+
+  if (show) {
+    if (!el.hidden && el.classList.contains('in')) return;
+
+    el.hidden = false;
+    size();
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+    return;
+  }
+
+  if (el.hidden) return;
+
+  el.classList.remove('in');
+  const fade = parseFloat(getComputedStyle(el).transitionDuration) * 1000;
+  el._t = setTimeout(() => {
+    el.hidden = true;
+    if (el === $('card')) render();
+    size();
+  }, fade + 30);
+}
+
+// the card stays inside the room the page gives us, past that it scrolls
+function fit() {
+  const height = Math.max(60, room - $('pill').offsetHeight - 30);
+  const max = room ? height + 'px' : '';
+  $('card').style.maxHeight = max;
+  $('card').classList.toggle('short', room > 0 && height < 300);
+  $('drawer').style.maxHeight = side ? max : '';
+  if (drawerOpen) place();
+}
+
+// Where the settings open: in the card if there's the height for it (always on a phone),
+// beside it if the player is wide enough, else in the card anyway and it scrolls.
+// Decided when they open. They only move back if the player gets too narrow.
+let drawerOpen = false;
+let side = null;
+const coarse = matchMedia('(pointer:coarse)').matches;
+
+// two cards next to each other, plus the gap and the padding
+const SIDE_W = 2 * 264 + 8 + 16;
+
+function place() {
+  const drawer = $('drawer');
+  const fold = $('drawerFold');
+  const card = $('card');
+  const deck = $('deck');
+
+  if (drawerOpen && (side === null || (side && roomW < SIDE_W))) {
+    const inCard = drawer.parentNode !== deck;
+    const drawerInCard = inCard && fold.classList.contains('open') ? drawer.offsetHeight : 0;
+    const cardHeight = card.scrollHeight - drawerInCard;
+    const maxHeight = room ? room - $('pill').offsetHeight - 30 : Infinity;
+
+    side = !coarse && roomW >= SIDE_W && cardHeight + drawer.offsetHeight > maxHeight;
+  }
+
+  $('gear').setAttribute('aria-expanded', String(drawerOpen));
+
+  if (side && drawerOpen) {
+    // beside the card, looking like a second card
+    unfold(fold, false);
+    if (drawer.parentNode !== deck) {
+      drawer.hidden = true;
+      drawer.classList.add('card', 'glass', 'anim');
+      deck.prepend(drawer);
+    }
+    drawer.style.maxHeight = card.style.maxHeight;
+    reveal(drawer, true);
+    return;
+  }
+
+  if (drawer.parentNode === deck) {
+    if (drawerOpen) {
+      putBack();
+      unfold(fold, true);
+      return;
+    }
+
+    // closing: let it fade out first, then it goes back into the card
+    reveal(drawer, false);
+    clearTimeout(drawer._back);
+    drawer._back = setTimeout(() => {
+      if (!drawerOpen) putBack();
+    }, 260);
+    return;
+  }
+
+  unfold(fold, drawerOpen);
+  if (drawerOpen) {
+    // once the fold is open, scroll down to it if the card got too tall
+    setTimeout(() => {
+      if (card.scrollHeight > card.clientHeight) glideTo(card, card.scrollHeight);
+    }, 240);
+  }
+}
+
+function putBack() {
+  const drawer = $('drawer');
+  clearTimeout(drawer._t);
+  drawer.classList.remove('card', 'glass', 'anim', 'in');
+  drawer.hidden = false;
+  drawer.style.maxHeight = '';
+  $('drawerFold').firstElementChild.append(drawer);
+  size();
+}
+
+// our own smooth wheel scrolling (browsers switch theirs off along with the OS animation setting)
+const glides = new WeakMap();
+
+function glideTo(el, top) {
+  let glide = glides.get(el);
+  if (!glide) {
+    glide = { pos: 0, to: 0, raf: 0 };
+    glides.set(el, glide);
+  }
+
+  if (!glide.raf) glide.pos = el.scrollTop;
+  glide.to = Math.max(0, Math.min(el.scrollHeight - el.clientHeight, top));
+
+  const step = () => {
+    glide.pos += (glide.to - glide.pos) * 0.22;
+    if (Math.abs(glide.to - glide.pos) < 0.5) glide.pos = glide.to;
+    el.scrollTop = glide.pos;
+    glide.raf = glide.pos === glide.to ? 0 : requestAnimationFrame(step);
+  };
+  if (!glide.raf) glide.raf = requestAnimationFrame(step);
+}
+
+const onWheel = (e) => {
+  const el = e.currentTarget;
+  if (e.ctrlKey || e.target === $('report') || el.scrollHeight <= el.clientHeight) return;
+  e.preventDefault();
+
+  // deltaMode says whether the wheel reports pixels, lines or pages
+  let distance = e.deltaY;
+  if (e.deltaMode === 1) distance *= 16;
+  else if (e.deltaMode === 2) distance *= el.clientHeight;
+
+  const glide = glides.get(el);
+  const from = glide && glide.raf ? glide.to : el.scrollTop;
+  glideTo(el, from + distance);
+};
+
+$('card').addEventListener('wheel', onWheel, { passive: false });
+$('drawer').addEventListener('wheel', onWheel, { passive: false });
+
+function size() {
+  const rect = $('app').getBoundingClientRect();
+  post({
+    type: 'size',
+    w: Math.ceil(rect.width) + 2 + spareWidth,
+    h: Math.ceil(rect.height) + 2 + spareHeight,
+    open,
+  });
+}
+
+const holdNow = () => {
+  held = true;
+  holdBy = '';
+  if (run) ss.set('jg.held.' + run, '1');
+};
+
+$('pill').onclick = () => {
+  open = !open;
+  render();
+};
+
+$('settingsDisc').onclick = () => {
+  const expanded = !$('settingsFold').classList.contains('open');
+  unfold($('settingsFold'), expanded);
+  if (expanded && usage) usage.settings_opened++;
+  $('settingsDisc').setAttribute('aria-expanded', String(expanded));
+};
+
+$('device').onchange = async () => {
+  const next = $('device').value;
+  if (!['handy', 'autoblow'].includes(next) || next === device) return;
+
+  $('device').disabled = true;
+  holdNow();
+
+  try {
+    await stopAll();
+
+    device = next;
+    autoblow = null;
+    store.set('jg.device', device);
+    bump('device');
+
+    key = store.get(deviceKey()) || '';
+    $('key').value = key;
+
+    setupFor = '';
+    phase = 'connect';
+    error = '';
+    serviceIssue = '';
+    stopUnconfirmed = false;
+  } catch {
+    error = 'Couldn’t stop your device. Stop it in its app before switching.';
+  }
+  render();
+};
+
+// key saved in another tab? fill it in, but not while connected or typing
+const recallKey = () => {
+  if (phase !== 'connect' || document.activeElement === $('key')) return;
+
+  key = store.get(deviceKey()) || '';
+  $('key').value = key;
+  render();
+};
+
+window.addEventListener('storage', (e) => {
+  if (e.key === deviceKey()) recallKey();
+});
+window.addEventListener('focus', recallKey);
+
+$('connect').onsubmit = (e) => {
+  e.preventDefault();
+  const typed = $('key').value.trim();
+
+  if (releaseControl && typed !== key) {
+    error = 'Disconnect the current device first.';
+    render();
+    return;
+  }
+
+  const format = device === 'handy' ? /^[A-Za-z0-9]{5,64}$/ : /^[!-~]{5,512}$/;
+  if (!format.test(typed)) {
+    error = device === 'handy' ? 'Enter your connection key first.' : 'Enter your device token first.';
+    phase = 'connect';
+    render();
+    return;
+  }
+
+  key = typed;
+  connect();
+};
+
+// true while the browser's storage-access prompt is open
+let asking = false;
+
+const askShared = () => {
+  let access;
+  if (cookiesWork) access = Promise.resolve();
+  else if (document.requestStorageAccess) access = document.requestStorageAccess();
+  else access = Promise.reject();
+
+  return access.then(() => {
+    shared = true;
+    return true;
+  }, () => false);
+};
+
+// On: ask the browser (it may prompt), then copy the settings and the key into the shared cookies.
+// Off: delete the shared key. The other sites forget it, this one keeps its own copy.
+$('share').onclick = (e) => {
+  const button = e.target.closest('button');
+  const choice = button && button.dataset.v;
+  if (choice) bump('share');
+
+  // read them before anything changes where store looks
+  const names = [
+    'device', 'delay', 'stroke', 'marks', 'outline', 'area', 'corner', 'preview', 'color', 'filler',
+    'inverse', 'oc', 'subs', 'subsLang', 'subLook', 'subPlace', 'fillerLevel', 'fillerAfter', 'usage',
+  ];
+  const settings = names.map((name) => ['jg.' + name, store.get('jg.' + name)]);
+
+  if (choice === 'on' && !shared && !asking) {
+    asking = true;
+    render();
+
+    askShared().then((granted) => {
+      asking = false;
+
+      if (granted) {
+        noShare.set(false);
+        for (const [name, value] of settings) {
+          if (value != null) store.set(name, value);
+        }
+        if (key) store.set(deviceKey(), key);
+        say($('settingsErr'), '');
+      } else {
+        say($('settingsErr'), 'Access wasn’t granted. Settings stay on this site.');
+      }
+      render();
+    });
+  }
+
+  if (choice === 'off') {
+    try {
+      document.cookie = `jg_key=; Max-Age=0; ${COOKIE_SCOPE}`;
+      document.cookie = `jg_autoblow=; Max-Age=0; ${COOKIE_SCOPE}`;
+    } catch {}
+
+    const saved = noShare.set(true);
+    shared = false;
+    error = saved ? '' : 'Sharing is off for this panel. Your browser couldn’t save this choice.';
+
+    // this site's own copy
+    if (key) store.set(deviceKey(), key);
+    render();
+  }
+};
+
+$('key').oninput = () => {
+  if (!error) return;
+  error = '';
+  render();
+};
+
+$('retry').onclick = () => {
+  if (phase !== 'ready') {
+    connect();
+    return;
+  }
+
+  error = '';
+  setupFor = '';
+  // upload afresh, in case Handy's hosted copy is gone
+  if (entry) ss.set('jg.url.' + variant(), null);
+  if (strokeBad) applyStroke();
+  render();
+  drive();
+};
+
+$('hold').onclick = () => {
+  const resume = held || host$.paused;
+  held = !resume;
+  holdBy = held ? 'user' : '';
+  if (run) ss.set('jg.held.' + run, held ? '1' : null);
+
+  post({ type: resume ? 'play' : 'pause' });
+  render();
+  drive();
+};
+
+// Disconnect and Quit: drop whatever is pending, then stop the toy with the key it was started with
+const stopAll = () => {
+  const k = key;
+  const wasMoving = moving;
+
+  conn++;
+  gen++;
+  cancel();
+  // no reconnecting on reload after this
+  if (run) ss.set('jg.auth.' + run, null);
+
+  const stopped = wasMoving && k ? queue(() => halt(k)) : Promise.resolve();
+  return stopped.then(() => releaseControl?.());
+};
+
+const stopFailed = 'Couldn’t stop your device. Stop it in its app.';
+
+$('disconnect').onclick = () => {
+  if (serviceStopping) return;
+
+  holdNow();
+  serviceStopping = true;
+  render();
+
+  const forget = () => {
+    key = '';
+    store.set(deviceKey(), null);
+    phase = 'connect';
+    open = true;
+    error = '';
+    serviceIssue = '';
+  };
+  const keep = () => {
+    error = stopFailed;
+    stopUnconfirmed = true;
+    phase = 'error';
+    open = true;
+    fault('stop');
+  };
+
+  stopAll().then(forget, keep).finally(() => {
+    serviceStopping = false;
+    render();
+  });
+};
+
+// Quit only closes once the toy has stopped. If that fails the panel stays, with the error.
+for (const button of document.querySelectorAll('.close')) {
+  button.onclick = () => {
+    // paused first, in case a reload follows a stop that failed
+    holdNow();
+    render();
+    sendUsage();
+
+    stopAll().then(() => post({ type: 'close' }), () => {
+      error = stopFailed;
+      open = true;
+      fault('stop');
+      render();
+    });
+  };
+}
+
+const nudge = (ms) => {
+  offsetMs = Math.max(-3000, Math.min(3000, offsetMs + ms));
+  store.set('jg.delay', String(offsetMs));
+  bump('offset');
+  render();
+  if (playing) drive();
+};
+$('minus').onclick = () => nudge(-25);
+$('plus').onclick = () => nudge(25);
+$('minus2').onclick = () => nudge(-250);
+$('plus2').onclick = () => nudge(250);
+
+const seg = (id, get, set) => {
+  const paint = () => pressOnly(id, get());
+
+  $(id).onclick = (e) => {
+    const button = e.target.closest('button');
+    const value = button && button.dataset.v;
+    if (!value) return;
+
+    set(value);
+    paint();
+    sendIds();
+  };
+  paint();
+};
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !open) return;
+  open = false;
+  render();
+});
+
+$('gear').onclick = () => {
+  drawerOpen = !drawerOpen;
+  side = null;
+  if (drawerOpen && usage) usage.settings_opened++;
+  place();
+};
+
+let tab = 'play';
+const paintTabs = () => {
+  for (const button of document.querySelectorAll('.tabs button')) {
+    const selected = button.dataset.tab === tab;
+    button.setAttribute('aria-selected', String(selected));
+    slide($('tab-' + button.dataset.tab), selected);
+  }
+};
+document.querySelector('.tabs').onclick = (e) => {
+  const button = e.target.closest('button');
+  if (!button) return;
+  tab = button.dataset.tab;
+  paintTabs();
+};
+paintTabs();
+
+seg('corner', () => corner, (v) => {
+  corner = v;
+  store.set('jg.corner', v);
+  bump('corner');
+});
+
+seg('preview', () => preview, (v) => {
+  preview = v;
+  store.set('jg.preview', v);
+  bump('preview');
+});
+
+// badge off, or on with the outline around the video or around the whole post
+seg('marks', () => (marks === 'off' ? 'off' : area), (v) => {
+  bump('badge');
+  marks = v === 'off' ? 'off' : 'on';
+  store.set('jg.marks', marks);
+  if (v !== 'off') {
+    area = v;
+    store.set('jg.area', v);
+  }
+  render();
+});
+
+$('outline').oninput = () => {
+  outline = Number($('outline').value);
+  store.set('jg.outline', String(outline));
+  sendIds();
+};
+$('outline').onchange = () => bump('outline');
+
+const accent = () => document.documentElement.style.setProperty('--accent', color === 'pink' ? '#e70d9e' : '#2b7bff');
+accent();
+seg('color', () => color, (v) => {
+  color = v;
+  store.set('jg.color', v);
+  accent();
+  bump('color');
+});
+
+// these swap the script on the toy, drive() sets up the new variant
+const scriptChanged = () => {
+  sendHeat();
+  render();
+  drive();
+};
+
+seg('filler', () => (filler ? 'on' : 'off'), (v) => {
+  filler = v === 'on';
+  store.set('jg.filler', v);
+  bump('filler');
+  scriptChanged();
+});
+
+seg('inverse', () => (inverse ? 'on' : 'off'), (v) => {
+  inverse = v === 'on';
+  store.set('jg.inverse', v);
+  bump('inverse');
+  scriptChanged();
+});
+
+seg('oc', () => (oc ? 'on' : 'off'), (v) => {
+  oc = v === 'on';
+  store.set('jg.oc', v);
+  bump('oc');
+  scriptChanged();
+});
+
+$('fillerAfter').onchange = () => {
+  fillerAfter = $('fillerAfter').value;
+  store.set('jg.fillerAfter', fillerAfter || null);
+  bump('filler_after');
+  scriptChanged();
+};
+
+$('fillerLevel').onchange = () => {
+  fillerLevel = Number($('fillerLevel').value);
+  store.set('jg.fillerLevel', String(fillerLevel));
+  bump('filler_level');
+  scriptChanged();
+};
+
+seg('subs', () => (subsOn() ? 'on' : 'off'), (v) => {
+  subsChoice = v;
+  store.set('jg.subs', v);
+  bump('subs');
+  sendSubs();
+});
+
+$('subsLang').onchange = () => {
+  subsLang = $('subsLang').value;
+  store.set('jg.subsLang', subsLang);
+  bump('subs_lang');
+  sendSubs();
+  render();
+};
+
+const setLook = (k, v) => {
+  look[k] = v;
+  store.set('jg.subLook', JSON.stringify(look));
+  post({ type: 'look', look: shownLook() });
+  render();
+};
+
+for (const [id, k] of [['subSize', 'size'], ['subText', 'text'], ['subBack', 'back'], ['subLift', 'lift'], ['subDelay', 'delay']]) {
+  $(id).oninput = () => setLook(k, Number($(id).value));
+  $(id).onchange = () => bump('sub_' + k);
+}
+
+$('subColor').oninput = () => setLook('color', $('subColor').value);
+$('subColor').onchange = () => bump('sub_color');
+
+seg('subPlace', placeNow, (v) => {
+  placeChoice = v;
+  store.set('jg.subPlace', v);
+  bump('sub_place');
+  setLook('place', v);
+});
+
+seg('usage', () => (usage ? 'on' : 'off'), chooseUsage);
+
+$('usageYes').onclick = () => {
+  chooseUsage('on');
+  $('pill').focus();
+};
+
+// The first No asks once more, the second one is final.
+$('usageNo').onclick = () => {
+  if (usageDetails) {
+    chooseUsage('off');
+    $('pill').focus();
+    return;
+  }
+
+  usageDetails = true;
+  render();
+  $('usageTitle').focus();
+};
+
+for (const [button, fold] of [['lookDisc', 'lookFold'], ['creditsDisc', 'creditsFold']]) {
+  $(button).onclick = () => {
+    const expand = $(button).getAttribute('aria-expanded') !== 'true';
+    if (expand && usage && button === 'lookDisc') usage.settings_opened++;
+    $(button).setAttribute('aria-expanded', String(expand));
+    unfold($(fold), expand);
+  };
+}
+
+const rangeText = (v) => (Number(v) === 100 ? 'Full' : v + '%');
+
+$('stroke').oninput = () => {
+  $('strokeTxt').textContent = rangeText($('stroke').value);
+};
+
+$('stroke').onchange = () => {
+  stroke = Number($('stroke').value);
+  store.set('jg.stroke', String(stroke));
+  bump('range');
+  if (phase !== 'ready') return;
+
+  applyStroke();
+  if (device === 'autoblow') drive();
+};
+
+function troubleshootingReport() {
+  const platforms = { of: 'OnlyFans', fs: 'Fansly', mv: 'ManyVids', ph: 'Pornhub' };
+  const platform = hostOrigin === location.origin ? 'Johnny Guides' : platforms[site()] || 'Unknown';
+  const connections = {
+    connect: error ? 'Needs attention' : 'Not connected',
+    connecting: 'Connecting', ready: 'Connected', offline: 'Offline', error: 'Error',
+  };
+  const video = Boolean(host$.postId || host$.mediaId);
+  let playback = 'Playing';
+  if (host$.waiting) {
+    playback = 'Buffering';
+  } else if (host$.paused) {
+    playback = video ? 'Paused' : 'Unknown';
+  }
+  const devicePlayback = stopUnconfirmed ? 'Stop unconfirmed' : playing ? 'Syncing' : held ? 'Held' : 'Idle';
+  const codes = [...reportErrors];
+  if (stale) codes.push('protocol_mismatch');
+  if (!CFG.appId && device === 'handy') codes.push('handy_not_configured');
+
+  // Every value is a fixed label or a boolean. Never include raw host or device data.
+  return [
+    'JG Sync troubleshooting',
+    'Panel protocol: ' + PROTOCOL,
+    'Bookmarklet protocol: ' + (!hostAt ? 'Waiting' : stale ? 'Mismatch' : PROTOCOL),
+    'Platform: ' + platform,
+    'Device: ' + (device === 'autoblow' ? 'Autoblow Ultra' : 'Handy'),
+    'Connection: ' + connections[phase],
+    'Video identified: ' + (video ? 'Yes' : 'No'),
+    'Matching script: ' + (entry ? 'Yes' : video && !scripts ? 'Checking' : 'No'),
+    'Video playback: ' + playback,
+    'Device playback: ' + devicePlayback,
+    'Error codes: ' + (codes.join(', ') || 'None'),
+  ].join('\n');
+}
+
+function showTroubleshooting(show) {
+  if (show) {
+    $('report').value = troubleshootingReport();
+    $('copyResult').textContent = '';
+    open = true;
+  }
+  $('panelControls').hidden = show;
+  $('troubleshooting').hidden = !show;
+  render();
+  $('card').scrollTop = 0;
+  $(show ? 'troubleshootingTitle' : 'openTroubleshooting').focus({ preventScroll: true });
+}
+
+$('openTroubleshooting').onclick = () => showTroubleshooting(true);
+$('backFromTroubleshooting').onclick = () => showTroubleshooting(false);
+$('copyReport').onclick = async () => {
+  const report = $('report');
+  try {
+    await navigator.clipboard.writeText(report.value);
+    $('copyResult').textContent = 'Report copied.';
+  } catch {
+    $('copyResult').textContent = 'Copy the selected text using your browser’s copy command.';
+    if (!open || $('troubleshooting').hidden) return;
+    report.focus();
+    report.select();
+  }
+};
+
+$('pill').ondblclick = (e) => {
+  if (e.altKey) showTroubleshooting(true);
+};
+
+new ResizeObserver(size).observe($('app'));
+
+// the page can't see the pointer while it's over this frame, so tell it (else the pill fades out under your mouse)
+$('app').addEventListener('pointerenter', () => post({ type: 'hover', on: true }));
+$('app').addEventListener('pointerleave', () => post({ type: 'hover', on: false }));
+
+// the frame is going away (moved, closed, another post). don't leave the toy running
+window.addEventListener('pagehide', () => {
+  sendUsage();
+
+  // stamp the time, so a reload within 10 s (inject.js moving the frame) can reconnect
+  if (run && ss.get('jg.auth.' + run)) ss.set('jg.auth.' + run, String(Date.now()));
+
+  if (!moving || !key) return;
+
+  // keepalive lets these go out although the page is closing
+  if (device === 'autoblow' && autoblow?.cluster) {
+    fetch(autoblow.cluster + '/autoblow/sync-script/stop', {
+      method: 'PUT',
+      keepalive: true,
+      credentials: 'omit',
+      redirect: 'error',
+      headers: { 'x-device-token': key },
+    }).catch(() => {});
+  } else if (device === 'handy') {
+    fetch(API + '/hssp/stop', {
+      method: 'PUT',
+      keepalive: true,
+      headers: { 'X-Connection-Key': key, 'X-Api-Key': CFG.appId, 'Content-Type': 'application/json' },
+      body: '{}',
+    }).catch(() => {});
+  }
+});
+
+// keep retrying, a failed load shouldn't show up as "No script for this video"
+const loadScripts = () => fetch('/sync/scripts.json')
+  .then((r) => (r.ok ? r.json() : null))
+  .then((loaded) => {
+    if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded)) throw new Error();
+
+    scripts = loaded;
+    pickScript();
+    drive();
+    sendIds();
+  })
+  .catch(() => setTimeout(loadScripts, 3000));
+
+loadScripts();
+window.parent.postMessage({ type: 'hello' }, '*');
+render();
+
+if (!CFG.appId && device === 'handy') {
+  phase = 'error';
+  error = 'Sync is not set up on this site yet.';
+  render();
+} else {
+  let access = Promise.resolve();
+  if (document.hasStorageAccess) {
+    access = document.hasStorageAccess()
+      .then((granted) => {
+        // switched off here: this site keeps its own key
+        if (noShare.get()) return;
+        // asking for access only happens on the Settings click
+        if (granted) shared = true;
+      })
+      .catch(() => {});
+  }
+
+  access.then(() => {
+    // saved on another site
+    if (!key) key = store.get(deviceKey()) || '';
+    if (key && document.activeElement !== $('key')) $('key').value = key;
+
+    // A saved key doesn't start the toy by itself. The one exception is a reload within 10 s of a
+    // panel the viewer connected in this run (connecting stops the toy first and Pause is kept).
+    // The mark only works once.
+    const auth = run && Date.now() - Number(ss.get('jg.auth.' + run)) < 10000;
+    if (run) ss.set('jg.auth.' + run, auth ? '1' : null);
+
+    if (key && auth) connect();
+    else render();
+  });
+}
+</script>
+<script>
+fetch('config.json', { credentials: 'omit' }).then((response) => {
+  if (!response.ok) throw new Error('Panel configuration unavailable');
+  return response.json();
+}).then((config) => {
+  if (typeof AutoblowDevice !== 'function' || !/^[a-f0-9]{40}$/.test(config.commit) || location.pathname !== `/sync/panel/${config.commit}/`) {
+    throw new Error('Invalid panel release');
+  }
+  window.JG_SYNC_CONFIG = config;
+  const source = document.getElementById('viewSource');
+  source.href = `https://github.com/JohnnyGuides/jg-sync/tree/${config.commit}`;
+  source.hidden = false;
+  const script = document.createElement('script');
+  script.textContent = document.getElementById('panelCode').textContent;
+  document.body.append(script);
+}).catch(() => {
+  document.getElementById('app').hidden = true;
+  const retry = document.getElementById('failed');
+  retry.hidden = false;
+  retry.onclick = () => location.reload();
+});
+</script>
+</body>
+</html>

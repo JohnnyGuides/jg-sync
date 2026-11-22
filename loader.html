@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>JG Sync</title>
+<style>
+:root{color-scheme:normal}
+html,body{margin:0;background:transparent}
+#failed{margin:4px;padding:7px 12px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:#161618;color:#f1efe8;font:12px system-ui,sans-serif}
+</style>
+</head>
+<body>
+<script>
+// johnnyguides.com serves this page into the JG Sync frame, at /sync/panel.
+// All it does is download the panel from GitHub and run it here:
+// https://github.com/JohnnyGuides/jg-sync
+{
+  const GITHUB = 'https://raw.githubusercontent.com/JohnnyGuides/jg-sync/main/';
+
+  // The one thing my server fills in: the Handy app id and the sites allowed to frame this page.
+  window.JG_SYNC_CONFIG = __JG_SYNC_CONFIG__;
+
+  const download = async (file) => {
+    const res = await fetch(GITHUB + file);
+    if (!res.ok) throw new Error(file + ' ' + res.status);
+    return res.text();
+  };
+  const run = (code) => {
+    const script = document.createElement('script');
+    script.textContent = code;
+    document.body.append(script);
+  };
+
+  Promise.all([download('panel.html'), download('autoblow.js')]).then(([html, autoblow]) => {
+    const panel = new DOMParser().parseFromString(html, 'text/html');
+    const code = panel.querySelector('script');
+    code.remove();
+    document.head.append(...panel.querySelectorAll('style'));
+    document.body.append(...panel.body.children);
+    run(autoblow);
+    run(code.textContent);
+  }).catch(() => {
+    document.body.innerHTML = '<button id="failed" onclick="location.reload()">JG Sync didn’t load. Retry</button>';
+  });
+}
+</script>
+</body>
+</html>
