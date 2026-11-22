@@ -23,18 +23,6 @@ If you turn on **Remember across sites**, you can use the same Handy key or Auto
 
 Open **Troubleshooting** in the JG Sync panel and choose **Copy report**. The report is generated in your browser. If your browser blocks clipboard access, select and copy the report text. Tell me what’s going wrong and paste the report into a message to me on any platform, or email both to [johnnyguides.feedback@gmail.com](mailto:johnnyguides.feedback@gmail.com) with whatever issue(s) you're having.
 
-## Privacy
-
-### Funscripts and privacy
-
-I host the funscripts and subtitles on my site. When the panel needs a funscript, it asks my site for that file and passes the movement data to Handy or Autoblow. That download still works with analytics off. My server sees the requested file and your connection’s IP address when it serves the download. JG Sync doesn’t save a download history.
-
-### Optional analytics
-
-Analytics are off by default. If you opt in, JG Sync reports things like which platform and toy you use, how long you sync, and which settings or features you use. It also records sync errors and broad categories like your device type, browser and operating system. I use that to decide what to improve.
-
-To stop one connection sending too many reports, the server keeps a temporary counter in memory for each IP address. I don’t save the IP in the analytics record. The record also leaves out your name, account, connection key, and which video or script you used. Records older than 25 months are deleted automatically. You can change your choice under **Settings → Device → Help improve JG Sync**.
-
 ## What the button does
 
 Here's the bookmarklet code. When you click the bookmarklet, it loads [`inject.js`](inject.js) from this repo.
@@ -65,6 +53,18 @@ That script [opens the JG Sync panel](inject.js#L1442) from [johnnyguides.com/sy
 If your panel has a **View source** link, it takes you to the GitHub commit that panel came from. You can compare the source of the panel’s URL with the **Raw** view of `panel.html` at that commit. They should match exactly. My site supplies the Handy app ID and supported sites separately.
 
 [`loader.html`](loader.html) was the page that fetched the panel code from GitHub. The panel with the **View source** link is served directly.
+
+## Privacy
+
+### Funscripts and privacy
+
+I host the funscripts and subtitles on my site. When the panel needs a funscript, it asks my site for that file and passes the movement data to Handy or Autoblow. That download still works with analytics off. My server sees the requested file and your connection’s IP address when it serves the download. JG Sync doesn’t save a download history.
+
+### Optional analytics
+
+Analytics are off by default. If you opt in, JG Sync reports things like which platform and toy you use, how long you sync, and which settings or features you use. It also records sync errors and broad categories like your device type, browser and operating system. I use that to decide what to improve.
+
+To stop one connection sending too many reports, the server keeps a temporary counter in memory for each IP address. I don’t save the IP in the analytics record. The record also leaves out your name, account, connection key, and which video or script you used. Records older than 25 months are deleted automatically. You can change your choice under **Settings → Device → Help improve JG Sync**.
 
 ## License
 
